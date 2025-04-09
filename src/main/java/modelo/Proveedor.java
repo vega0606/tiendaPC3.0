@@ -105,4 +105,37 @@ public class Proveedor {
     public String getEstado() {
         return estado;
     }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public LocalDate getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(LocalDate fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    public double getSaldoPendiente() {
+        return saldoPendiente;
+    }
+
+    public void setSaldoPendiente(double saldoPendiente) {
+        this.saldoPendiente = saldoPendiente;
+    }
+    
+    @Override
+    public String toString() {
+        return empresa + " (" + contacto + ")";
+    }
+    
+    /**
+     * Verifica si el proveedor está activo
+     * @return true si el proveedor está activo
+     */
+    public boolean isActivo() {
+        return "Activo".equals(estado);
+    }
 }
