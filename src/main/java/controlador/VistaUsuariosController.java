@@ -3,7 +3,7 @@ package controlador;
 import java.util.List;
 
 import modelo.Usuario;
-import Ventana.VistaUsuarios;
+import ventana.VistaUsuarios;
 
 /**
  * Controlador para la vista de usuarios.

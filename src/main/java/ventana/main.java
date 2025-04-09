@@ -1,4 +1,4 @@
-package Ventana;
+package ventana;
 
 public class main {
 

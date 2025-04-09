@@ -1,4 +1,4 @@
-package Ventana;
+package ventana;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -7,18 +7,18 @@ import java.util.Map;
 
 import javax.swing.*;
 
-import Ventana.MenuLateral;
-import Ventana.SistemaFacturacionInventario;
-import Ventana.VistaAlertas;
-import Ventana.VistaClientes;
-import Ventana.VistaDevoluciones;
-import Ventana.VistaExportImport;
-import Ventana.VistaFacturacion;
-import Ventana.VistaInventario;
-import Ventana.VistaPedidos;
-import Ventana.VistaReportes;
-import Ventana.VistaTransacciones;
-import Ventana.VistaUsuarios;
+import ventana.MenuLateral;
+import ventana.SistemaFacturacionInventario;
+import ventana.VistaAlertas;
+import ventana.VistaClientes;
+import ventana.VistaDevoluciones;
+import ventana.VistaExportImport;
+import ventana.VistaFacturacion;
+import ventana.VistaInventario;
+import ventana.VistaPedidos;
+import ventana.VistaReportes;
+import ventana.VistaTransacciones;
+import ventana.VistaUsuarios;
 
 public class SistemaFacturacionInventario extends JFrame {
 

@@ -4,7 +4,7 @@ import java.util.List;
 
 import modelo.Pedido;
 import modelo.Proveedor;
-import vista.VistaPedidos;
+import ventana.VistaPedidos;
 
 /**
  * Controlador para la vista de pedidos.

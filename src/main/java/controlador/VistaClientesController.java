@@ -2,7 +2,7 @@ package controlador;
 
 import modelo.Cliente;
 import modelo.Proveedor;
-import Ventana.VistaClientes;
+import ventana.VistaClientes;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

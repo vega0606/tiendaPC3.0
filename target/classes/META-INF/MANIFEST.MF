@@ -12,7 +12,7 @@ Class-Path: lib/mysql-connector-j-8.0.33.jar lib/protobuf-java-3.21.9.ja
  1.jar lib/commons-io-2.11.0.jar lib/SparseBitSet-1.2.jar lib/log4j-api-
  2.18.0.jar lib/poi-ooxml-5.2.3.jar lib/poi-ooxml-lite-5.2.3.jar lib/xml
  beans-5.1.1.jar lib/commons-compress-1.21.jar lib/curvesapi-1.07.jar li
- b/slf4j-api-2.0.7.jar lib/slf4j-simple-2.0.7.jar
+ b/slf4j-api-2.0.7.jar lib/slf4j-simple-2.0.7.jar lib/jcalendar-1.4.jar
 Main-Class: Ventana.VistaLogin
 Created-By: Maven Integration for Eclipse
 
