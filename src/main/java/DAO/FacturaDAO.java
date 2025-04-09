@@ -1,10 +1,10 @@
 package DAO;
 
 import modelo.DatabaseConnector;
-import Modelo.Factura;
-import Modelo.DetalleFactura;
-import Modelo.Producto;
-import Modelo.Cliente;
+import modelo.Factura;
+import modelo.DetalleFactura;
+import modelo.Producto;
+import modelo.Cliente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

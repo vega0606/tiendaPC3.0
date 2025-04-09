@@ -1,6 +1,6 @@
 package DAO;
 
-import Modelo.Alerta;
+import modelo.Alerta;
 import modelo.DatabaseConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
