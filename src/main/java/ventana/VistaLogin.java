@@ -1,4 +1,4 @@
-package Ventana;
+package ventana;
 
 import javax.swing.*;
 import java.awt.*;

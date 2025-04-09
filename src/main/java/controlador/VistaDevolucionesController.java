@@ -11,7 +11,7 @@ import ventana.VistaDevoluciones;
  */
 public class VistaDevolucionesController {
     
-    private VistaDevolucionesView vista;
+    private VistaDevoluciones vista;
     private DevolucionController devolucionController;
     
     /**
@@ -20,7 +20,7 @@ public class VistaDevolucionesController {
      * @param vista La vista de devoluciones
      * @param devolucionController El controlador de devoluciones
      */
-    public VistaDevolucionesController(VistaDevolucionesView vista, DevolucionController devolucionController) {
+    public VistaDevolucionesController(VistaDevoluciones vista, DevolucionController devolucionController) {
         this.vista = vista;
         this.devolucionController = devolucionController;
         

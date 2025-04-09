@@ -4,7 +4,7 @@ import modelo.Cliente;
 import modelo.DetalleFactura;
 import modelo.Factura;
 import modelo.Producto;
-import Ventana.VistaFacturacion;
+import ventana.VistaFacturacion;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

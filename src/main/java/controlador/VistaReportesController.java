@@ -7,7 +7,7 @@ import java.util.Map;
 import modelo.Producto;
 import modelo.Cliente;
 import modelo.Factura;
-import vista.VistaReportes;
+import ventana.VistaReportes;
 
 /**
  * Controlador para la vista de reportes.
@@ -15,7 +15,7 @@ import vista.VistaReportes;
  */
 public class VistaReportesController {
     
-    private VistaReportesView vista;
+    private VistaReportes vista;
     private ReporteController reporteController;
     private ProductoController productoController;
     private ClienteController clienteController;
@@ -30,7 +30,7 @@ public class VistaReportesController {
      * @param clienteController El controlador de clientes
      * @param facturaController El controlador de facturas
      */
-    public VistaReportesController(VistaReportesView vista, ReporteController reporteController,
+    public VistaReportesController(VistaReportes vista, ReporteController reporteController,
                                   ProductoController productoController, ClienteController clienteController,
                                   FacturaController facturaController) {
         this.vista = vista;
@@ -86,7 +86,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de ventas por período.
      */
-    private void generarReporteVentasPorPeriodo() {
+    public void generarReporteVentasPorPeriodo() {
         try {
             Date fechaInicio = vista.getFechaInicio().getDate();
             Date fechaFin = vista.getFechaFin().getDate();
@@ -128,7 +128,7 @@ public class VistaReportesController {
                 return;
             }
             
-            List<Map<String, Object>> datosReporte = reporteController.generarReporteProductosMasVendidos(cantidad, fechaInicio, fechaFin);
+            List<Map<String, Object>> datosReporte = ReporteController.generarReporteProductosMasVendidos(cantidad, fechaInicio, fechaFin);
             vista.mostrarReporteProductosMasVendidos(datosReporte);
             
         } catch (Exception e) {

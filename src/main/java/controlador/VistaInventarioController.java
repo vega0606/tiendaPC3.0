@@ -1,8 +1,8 @@
 package controlador;
 
 import modelo.Producto;
+import ventana.VistaInventario;
 import modelo.Categoria;
-import Ventana.VistaInventario;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

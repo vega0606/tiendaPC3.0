@@ -1,4 +1,4 @@
-package Ventana;
+package ventana;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -10,13 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.AbstractCellEditor;
-import javax.swing.CellEditor;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.EventListenerList;
-
-import java.util.EventObject;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -34,7 +27,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-import controlador.VistaAlertasController;
+import Controlador.VistaAlertasController;
 
 /**
  * Vista para la gestión de alertas del sistema
