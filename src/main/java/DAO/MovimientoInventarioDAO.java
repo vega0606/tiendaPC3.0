@@ -1,7 +1,7 @@
 package DAO;
 
 import modelo.DatabaseConnector;
-import Modelo.MovimientoInventario;
+import modelo.MovimientoInventario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

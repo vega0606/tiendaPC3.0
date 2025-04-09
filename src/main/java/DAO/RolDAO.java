@@ -1,8 +1,8 @@
 package DAO;
 
 import modelo.DatabaseConnector;
-import Modelo.Rol;
-import Modelo.Permiso;
+import modelo.Rol;
+import modelo.Permiso;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
