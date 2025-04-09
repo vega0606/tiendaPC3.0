@@ -1,10 +1,10 @@
 package DAO;
 
 import modelo.DatabaseConnector;
-import Modelo.Pedido;
-import Modelo.DetallePedido;
-import Modelo.Proveedor;
-import Modelo.Producto;
+import modelo.Pedido;
+import modelo.DetallePedido;
+import modelo.Proveedor;
+import modelo.Producto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
