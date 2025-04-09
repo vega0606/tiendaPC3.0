@@ -315,4 +315,25 @@ public class ProveedorDAO implements DAO<Proveedor, String> {
         
         return proveedor;
     }
+    public List<Proveedor> listarPorEstado(String estado) throws Exception {
+        String sql = "SELECT * FROM proveedores WHERE estado = ? ORDER BY empresa";
+        List<Proveedor> proveedores = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, estado);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    proveedores.add(mapearProveedor(rs));
+                }
+            }
+            
+            return proveedores;
+        } catch (SQLException e) {
+            logger.error("Error al listar proveedores por estado: {}", e.getMessage());
+            throw e;
+        }
+    }
 }

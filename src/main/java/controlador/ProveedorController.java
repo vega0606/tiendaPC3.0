@@ -146,7 +146,7 @@ public class ProveedorController {
      */
     public List<Proveedor> listarProveedoresPorCategoria(String categoria) {
         try {
-            return proveedorDAO.listarPorCategoria(categoria);
+            return proveedorDAO.buscarPorCategoria(categoria);
         } catch (Exception e) {
             logger.error("Error al listar proveedores por categoría: {}", e.getMessage(), e);
             return new ArrayList<>();

@@ -42,7 +42,7 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
                 stmt.setString(2, devolucion.getNumeroFactura());
                 stmt.setDate(3, Date.valueOf(devolucion.getFecha()));
                 stmt.setString(4, devolucion.getMotivo());
-                stmt.setString(5, devolucion.getDetalles());
+                stmt.setString(5, devolucion.getDetalles1());
                 stmt.setBigDecimal(6, devolucion.getTotal());
                 stmt.setInt(7, devolucion.getIdUsuario());
                 
@@ -213,9 +213,6 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
     
     @Override
     public Devolucion actualizar(Devolucion devolucion) throws Exception {
-        // Normalmente no se actualizan las devoluciones una vez creadas
-        // Pero implementamos el método para cumplir con la interfaz
-        
         String sql = "UPDATE devoluciones SET numero_factura = ?, fecha = ?, motivo = ?, " +
                     "detalles = ?, total = ? WHERE id = ?";
         
@@ -225,7 +222,7 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             stmt.setString(1, devolucion.getNumeroFactura());
             stmt.setDate(2, Date.valueOf(devolucion.getFecha()));
             stmt.setString(3, devolucion.getMotivo());
-            stmt.setString(4, devolucion.getDetalles());
+            stmt.setString(4, devolucion.getDetalles1());  // Aquí está el campo detalles
             stmt.setBigDecimal(5, devolucion.getTotal());
             stmt.setString(6, devolucion.getId());
             
@@ -441,5 +438,31 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
         detalle.setSubtotal(rs.getBigDecimal("subtotal"));
         
         return detalle;
+    }
+    public List<Devolucion> buscarPorMotivo(String motivo) throws Exception {
+        String sql = "SELECT * FROM devoluciones WHERE motivo LIKE ? ORDER BY fecha DESC";
+        List<Devolucion> devoluciones = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, "%" + motivo + "%");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Devolucion devolucion = mapearDevolucion(rs);
+                    
+                    // Opcional: cargar detalles si los necesitas
+                    devolucion.setDetalles(buscarDetallesPorDevolucion(devolucion.getId()));
+                    
+                    devoluciones.add(devolucion);
+                }
+            }
+            
+            return devoluciones;
+        } catch (SQLException e) {
+            logger.error("Error al buscar devoluciones por motivo: {}", e.getMessage());
+            throw e;
+        }
     }
 }

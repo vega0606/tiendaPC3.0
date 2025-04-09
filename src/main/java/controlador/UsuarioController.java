@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 /**
  * Controlador para la gestión de usuarios
  */
@@ -21,6 +23,7 @@ public class UsuarioController {
     private UsuarioDAO usuarioDAO;
     private RolDAO rolDAO;
     private PermisoDAO permisoDAO;
+    private static Usuario usuarioActual;
     
     public UsuarioController() {
         usuarioDAO = new UsuarioDAO();
@@ -37,29 +40,28 @@ public class UsuarioController {
      * @param rol Rol del usuario
      * @return El usuario creado o null si ocurre un error
      */
-    public Usuario crearUsuario(String nombre, String username, String password, 
-                              String email, String rol) {
+    public boolean crearUsuario(Usuario usuarioNuevo, String password) {
         try {
             // Validar que el username no exista
-            Usuario existente = usuarioDAO.buscarPorUsername(username);
+            Usuario existente = usuarioDAO.buscarPorUsername(usuarioNuevo.getUsername());
             if (existente != null) {
-                logger.error("Ya existe un usuario con el username: {}", username);
-                return null;
+                logger.error("Ya existe un usuario con el username: {}", usuarioNuevo.getUsername());
+                return false;
             }
             
-            // Crear el usuario
-            Usuario usuario = new Usuario();
-            usuario.setNombre(nombre);
-            usuario.setUsername(username);
-            usuario.setPassword(password); // En un sistema real, se debería encriptar
-            usuario.setEmail(email);
-            usuario.setRol(rol);
-            usuario.setActivo(true);
+            // Establecer la contraseña
+            usuarioNuevo.setPassword(password); // En un sistema real, se debería encriptar
             
-            return usuarioDAO.crear(usuario);
+            // Establecer estado activo por defecto
+            usuarioNuevo.setActivo(true);
+            
+            // Crear el usuario
+            Usuario usuarioCreado = usuarioDAO.crear(usuarioNuevo);
+            
+            return usuarioCreado != null;
         } catch (Exception e) {
             logger.error("Error al crear usuario: {}", e.getMessage(), e);
-            return null;
+            return false;
         }
     }
     
@@ -438,4 +440,63 @@ public class UsuarioController {
             return false;
         }
     }
+    
+    public List<Usuario> obtenerTodosUsuarios() {
+        try {
+            return usuarioDAO.listarTodos();
+        } catch (Exception e) {
+            logger.error("Error al obtener todos los usuarios: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+    public Usuario buscarUsuarioPorUsername(String username) {
+        try {
+            return usuarioDAO.buscarPorUsername(username);
+        } catch (Exception e) {
+            logger.error("Error al buscar usuario por username: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+   
+    public boolean restablecerPassword(int id) {
+        try {
+            Usuario usuario = usuarioDAO.buscarPorId(id);
+            if (usuario == null) {
+                logger.error("Usuario no encontrado con ID: {}", id);
+                return false;
+            }
+            String passwordPredeterminada = "Temporal123!";
+            usuario.setPassword(passwordPredeterminada);
+            
+            usuarioDAO.actualizar(usuario);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error al restablecer contraseña: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+    public List<Usuario> filtrarUsuariosPorRol(String rol) {
+        try {
+            return usuarioDAO.buscarPorRol(rol);
+        } catch (Exception e) {
+            logger.error("Error al filtrar usuarios por rol: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+    
+    public static Usuario obtenerUsuarioActual() {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("No hay usuario logeado");
+        }
+        return usuarioActual;
+    }
+    
+    public static void setUsuarioActual(Usuario usuario) {
+        usuarioActual = usuario;
+    }
+    
+    public static void cerrarSesion() {
+        usuarioActual = null;
+    }
 }
+
