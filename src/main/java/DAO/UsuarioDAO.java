@@ -1,7 +1,7 @@
 package DAO;
 
 import modelo.DatabaseConnector;
-import Modelo.Usuario;
+import modelo.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
