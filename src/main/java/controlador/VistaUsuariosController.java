@@ -3,7 +3,7 @@ package controlador;
 import java.util.List;
 
 import modelo.Usuario;
-import vista.VistaUsuariosView;
+import Ventana.VistaUsuarios;
 
 /**
  * Controlador para la vista de usuarios.
@@ -11,7 +11,7 @@ import vista.VistaUsuariosView;
  */
 public class VistaUsuariosController {
     
-    private VistaUsuariosView vista;
+    private VistaUsuarios vista;
     private UsuarioController usuarioController;
     
     /**
@@ -20,7 +20,7 @@ public class VistaUsuariosController {
      * @param vista La vista de usuarios
      * @param usuarioController El controlador de usuarios
      */
-    public VistaUsuariosController(VistaUsuariosView vista, UsuarioController usuarioController) {
+    public VistaUsuariosController(VistaUsuarios vista, UsuarioController usuarioController) {
         this.vista = vista;
         this.usuarioController = usuarioController;
         
@@ -70,11 +70,9 @@ public class VistaUsuariosController {
         // Listener para el botón de activar/desactivar usuario
         vista.getBtnCambiarEstado().addActionListener(e -> cambiarEstadoUsuarioSeleccionado());
         
-        // Listener para exportar a PDF
-        vista.getBtnExportarPDF().addActionListener(e -> exportarAFormato("PDF"));
+   
         
-        // Listener para exportar a Excel
-        vista.getBtnExportarExcel().addActionListener(e -> exportarAFormato("Excel"));
+     
     }
     
     /**
@@ -247,37 +245,8 @@ public class VistaUsuariosController {
         }
     }
     
-    /**
-     * Exporta los usuarios mostrados a un formato específico.
-     * 
-     * @param formato El formato de exportación ("PDF" o "Excel")
-     */
-    private void exportarAFormato(String formato) {
-        List<Usuario> usuarios = vista.obtenerUsuariosMostrados();
-        
-        if (usuarios.isEmpty()) {
-            vista.mostrarMensaje("No hay datos para exportar");
-            return;
-        }
-        
-        String rutaArchivo = vista.seleccionarRutaGuardado(formato);
-        
-        if (rutaArchivo != null) {
-            boolean exportado = false;
-            
-            if ("PDF".equals(formato)) {
-                exportado = usuarioController.exportarAPDF(usuarios, rutaArchivo);
-            } else if ("Excel".equals(formato)) {
-                exportado = usuarioController.exportarAExcel(usuarios, rutaArchivo);
-            }
-            
-            if (exportado) {
-                vista.mostrarMensaje("Datos exportados correctamente a " + formato);
-            } else {
-                vista.mostrarMensaje("Error al exportar a " + formato);
-            }
-        }
-    }
+    
+   
     
     /**
      * Guarda un usuario nuevo o actualizado.

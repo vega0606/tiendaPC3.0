@@ -434,4 +434,107 @@ public class TransaccionDAO implements DAO<Transaccion, String> {
         
         return transaccion;
     }
+    /**
+     * Buscar transacciones por estado
+     * @param estado Estado de la transacción
+     * @return Lista de transacciones con el estado especificado
+     * @throws Exception
+     */
+    public List<Transaccion> buscarPorEstado(String estado) throws Exception {
+        String sql = "SELECT * FROM transacciones WHERE estado = ? ORDER BY fecha DESC";
+        List<Transaccion> transacciones = new ArrayList<>();
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, estado);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    transacciones.add(mapearTransaccion(rs));
+                }
+            }
+            
+            return transacciones;
+        } catch (SQLException e) {
+            logger.error("Error al buscar transacciones por estado: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Cancelar una transacción
+     * @param id ID de la transacción a cancelar
+     * @return true si la cancelación fue exitosa
+     * @throws Exception
+     */
+    public boolean cancelarTransaccion(String id, String motivo) throws Exception {
+        // Primero verificamos si la transacción puede ser cancelada
+        Transaccion transaccion = buscarPorId(id);
+        
+        if (transaccion == null) {
+            logger.error("Transacción no encontrada para cancelación: {}", id);
+            return false;
+        }
+        
+        // Verificar que no esté ya cancelada
+        if ("Cancelada".equals(transaccion.getEstado())) {
+            logger.info("Transacción {} ya está cancelada", id);
+            return true;
+        }
+        
+        // Método para cancelar la transacción con motivo
+        String sql = "UPDATE transacciones SET estado = 'Cancelada', detalles_cancelacion = ? WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, motivo);
+            stmt.setString(2, id);
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows == 0) {
+                logger.error("No se pudo cancelar la transacción: {}", id);
+                return false;
+            }
+            
+            logger.info("Transacción {} cancelada exitosamente. Motivo: {}", id, motivo);
+            return true;
+        } catch (SQLException e) {
+            logger.error("Error al cancelar transacción: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Actualizar el estado de una transacción
+     * @param id ID de la transacción
+     * @param nuevoEstado Nuevo estado de la transacción
+     * @return true si la actualización fue exitosa
+     * @throws Exception
+     */
+    public boolean actualizarEstado(String id, String nuevoEstado) throws Exception {
+        String sql = "UPDATE transacciones SET estado = ? WHERE id = ?";
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nuevoEstado);
+            stmt.setString(2, id);
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows == 0) {
+                logger.error("No se pudo actualizar el estado de la transacción: {}", id);
+                return false;
+            }
+            
+            logger.info("Estado de transacción {} actualizado a: {}", id, nuevoEstado);
+            return true;
+        } catch (SQLException e) {
+            logger.error("Error al actualizar estado de transacción: {}", e.getMessage());
+            throw e;
+        }
+    }
 }
