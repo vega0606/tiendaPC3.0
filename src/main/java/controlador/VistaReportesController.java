@@ -47,40 +47,8 @@ public class VistaReportesController {
      * Inicializa los componentes de la vista y configura los listeners.
      */
     private void inicializarVista() {
-        // Configurar los listeners para los distintos tipos de reportes
-        configurarListeners();
-    }
-    
-    /**
-     * Configura los listeners para los botones y componentes interactivos de la vista.
-     */
-    private void configurarListeners() {
-        // Listener para generar reporte de ventas por período
-        vista.getBtnReporteVentasPeriodo().addActionListener(e -> generarReporteVentasPorPeriodo());
-        
-        // Listener para generar reporte de productos más vendidos
-        vista.getBtnReporteProductosMasVendidos().addActionListener(e -> generarReporteProductosMasVendidos());
-        
-        // Listener para generar reporte de clientes frecuentes
-        vista.getBtnReporteClientesFrecuentes().addActionListener(e -> generarReporteClientesFrecuentes());
-        
-        // Listener para generar reporte de inventario valorizado
-        vista.getBtnReporteInventarioValorizado().addActionListener(e -> generarReporteInventarioValorizado());
-        
-        // Listener para generar reporte de ganancias por período
-        vista.getBtnReporteGananciasPeriodo().addActionListener(e -> generarReporteGananciasPorPeriodo());
-        
-        // Listener para generar reporte de productos con bajo stock
-        vista.getBtnReporteBajoStock().addActionListener(e -> generarReporteProductosBajoStock());
-        
-        // Listener para generar reporte de devoluciones
-        vista.getBtnReporteDevoluciones().addActionListener(e -> generarReporteDevoluciones());
-        
-        // Listener para exportar a PDF
-        vista.getBtnExportarPDF().addActionListener(e -> exportarReporteActual("PDF"));
-        
-        // Listener para exportar a Excel
-        vista.getBtnExportarExcel().addActionListener(e -> exportarReporteActual("Excel"));
+        // No es necesario configurar los listeners aquí porque la vista ya los configura
+        // en su método configurarListeners()
     }
     
     /**
@@ -102,6 +70,12 @@ public class VistaReportesController {
             }
             
             Map<String, Object> datosReporte = reporteController.generarReporteVentasPorPeriodo(fechaInicio, fechaFin);
+            
+            if (datosReporte == null) {
+                vista.mostrarMensaje("No hay datos para el período seleccionado");
+                return;
+            }
+            
             vista.mostrarReporteVentasPorPeriodo(datosReporte);
             
         } catch (Exception e) {
@@ -112,7 +86,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de productos más vendidos.
      */
-    public void ReporteProductosMasVendidos() {
+    public void generarReporteProductosMasVendidos() {
         try {
             int cantidad = vista.getCantidadTopProductos();
             Date fechaInicio = vista.getFechaInicio().getDate();
@@ -128,7 +102,13 @@ public class VistaReportesController {
                 return;
             }
             
-            List<Map<String, Object>> datosReporte = ReporteController.generarReporteProductosMasVendidos(cantidad, fechaInicio, fechaFin);
+            List<Map<String, Object>> datosReporte = reporteController.generarReporteProductosMasVendidos(cantidad, fechaInicio, fechaFin);
+            
+            if (datosReporte == null || datosReporte.isEmpty()) {
+                vista.mostrarMensaje("No hay datos para el período seleccionado");
+                return;
+            }
+            
             vista.mostrarReporteProductosMasVendidos(datosReporte);
             
         } catch (Exception e) {
@@ -139,7 +119,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de clientes frecuentes.
      */
-    private void generarReporteClientesFrecuentes() {
+    public void generarReporteClientesFrecuentes() {
         try {
             int cantidad = vista.getCantidadTopClientes();
             Date fechaInicio = vista.getFechaInicio().getDate();
@@ -156,6 +136,12 @@ public class VistaReportesController {
             }
             
             List<Map<String, Object>> datosReporte = reporteController.generarReporteClientesFrecuentes(cantidad, fechaInicio, fechaFin);
+            
+            if (datosReporte == null || datosReporte.isEmpty()) {
+                vista.mostrarMensaje("No hay datos para el período seleccionado");
+                return;
+            }
+            
             vista.mostrarReporteClientesFrecuentes(datosReporte);
             
         } catch (Exception e) {
@@ -166,12 +152,23 @@ public class VistaReportesController {
     /**
      * Genera un reporte de inventario valorizado.
      */
-    private void generarReporteInventarioValorizado() {
+    public void generarReporteInventarioValorizado() {
         try {
             List<Producto> productos = productoController.listarProductos();
-            double valorTotal = reporteController.calcularValorTotalInventario(productos);
             
+            if (productos == null || productos.isEmpty()) {
+                vista.mostrarMensaje("No hay productos en el inventario");
+                return;
+            }
+            
+            double valorTotal = reporteController.calcularValorTotalInventario(productos);
             Map<String, Object> datosReporte = reporteController.generarReporteInventarioValorizado(productos);
+            
+            if (datosReporte == null) {
+                vista.mostrarMensaje("Error al generar los datos del reporte");
+                return;
+            }
+            
             vista.mostrarReporteInventarioValorizado(datosReporte, valorTotal);
             
         } catch (Exception e) {
@@ -182,7 +179,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de ganancias por período.
      */
-    private void generarReporteGananciasPorPeriodo() {
+    public void generarReporteGananciasPorPeriodo() {
         try {
             Date fechaInicio = vista.getFechaInicio().getDate();
             Date fechaFin = vista.getFechaFin().getDate();
@@ -197,8 +194,28 @@ public class VistaReportesController {
                 return;
             }
             
-            List<Factura> facturas = facturaController.obtenerFacturasPorPeriodo(fechaInicio, fechaFin);
+            // Convertir Date a LocalDate para usar en facturaController
+            java.time.LocalDate inicio = fechaInicio.toInstant()
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate();
+            java.time.LocalDate fin = fechaFin.toInstant()
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDate();
+                
+            List<Factura> facturas = facturaController.buscarFacturasPorFecha(inicio, fin);
+            
+            if (facturas == null || facturas.isEmpty()) {
+                vista.mostrarMensaje("No hay facturas en el período seleccionado");
+                return;
+            }
+            
             Map<String, Object> datosReporte = reporteController.generarReporteGananciasPorPeriodo(facturas);
+            
+            if (datosReporte == null) {
+                vista.mostrarMensaje("Error al generar los datos del reporte");
+                return;
+            }
+            
             vista.mostrarReporteGananciasPorPeriodo(datosReporte);
             
         } catch (Exception e) {
@@ -209,11 +226,22 @@ public class VistaReportesController {
     /**
      * Genera un reporte de productos con bajo stock.
      */
-    private void generarReporteProductosBajoStock() {
+    public void generarReporteProductosBajoStock() {
         try {
             int limiteStock = vista.getLimiteStock();
             
             List<Producto> productosBajoStock = reporteController.generarReporteProductosBajoStock(limiteStock);
+            
+            if (productosBajoStock == null) {
+                vista.mostrarMensaje("Error al generar el reporte");
+                return;
+            }
+            
+            if (productosBajoStock.isEmpty()) {
+                vista.mostrarMensaje("No hay productos con stock por debajo de " + limiteStock);
+                return;
+            }
+            
             vista.mostrarReporteProductosBajoStock(productosBajoStock, limiteStock);
             
         } catch (Exception e) {
@@ -224,7 +252,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de devoluciones.
      */
-    private void generarReporteDevoluciones() {
+    public void generarReporteDevoluciones() {
         try {
             Date fechaInicio = vista.getFechaInicio().getDate();
             Date fechaFin = vista.getFechaFin().getDate();
@@ -240,6 +268,12 @@ public class VistaReportesController {
             }
             
             Map<String, Object> datosReporte = reporteController.generarReporteDevoluciones(fechaInicio, fechaFin);
+            
+            if (datosReporte == null) {
+                vista.mostrarMensaje("Error al generar los datos del reporte");
+                return;
+            }
+            
             vista.mostrarReporteDevoluciones(datosReporte);
             
         } catch (Exception e) {
