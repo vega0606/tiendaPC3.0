@@ -22,93 +22,105 @@ public class Devolucion {
     private List<DetalleDevolucion> detalles_lista;
     
     public Devolucion() {
-        this.detalles_lista = new ArrayList<>();
+        // Inicialización mínima para la entidad
         this.total = BigDecimal.ZERO;
         this.fecha = LocalDate.now();
+        // No inicializamos la lista para BD, se cargará mediante el DAO
     }
-
+    
     // Getters y Setters
     public String getId() {
         return id;
     }
-
+    
     public void setId(String id) {
         this.id = id;
     }
-
+    
     public String getNumeroFactura() {
         return numeroFactura;
     }
-
+    
     public void setNumeroFactura(String numeroFactura) {
         this.numeroFactura = numeroFactura;
     }
-
+    
     public Factura getFactura() {
         return factura;
     }
-
+    
     public void setFactura(Factura factura) {
         this.factura = factura;
         if (factura != null) {
             this.numeroFactura = factura.getNumero();
         }
     }
-
+    
     public LocalDate getFecha() {
         return fecha;
     }
-
+    
     public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
     }
-
+    
     public String getMotivo() {
         return motivo;
     }
-
+    
     public void setMotivo(String motivo) {
         this.motivo = motivo;
     }
-
-    public String getDetalles1() {
+    
+    public String getDetalles() {
         return detalles;
     }
-
+    
     public void setDetalles(String detalles) {
         this.detalles = detalles;
     }
-
+    
     public BigDecimal getTotal() {
         return total;
     }
-
+    
     public void setTotal(BigDecimal total) {
         this.total = total;
     }
-
+    
     public int getIdUsuario() {
         return idUsuario;
     }
-
+    
     public void setIdUsuario(int idUsuario) {
         this.idUsuario = idUsuario;
     }
-
+    
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
-
+    
     public void setFechaCreacion(LocalDateTime fechaCreacion) {
         this.fechaCreacion = fechaCreacion;
     }
-
-    public List<DetalleDevolucion> getDetalles() {
+    
+    public List<DetalleDevolucion> getDetallesLista() {
+        if (detalles_lista == null) {
+            detalles_lista = new ArrayList<>();
+        }
         return detalles_lista;
     }
-
-    public void setDetalles(List<DetalleDevolucion> detalles) {
+    
+    public void setDetallesLista(List<DetalleDevolucion> detalles) {
         this.detalles_lista = detalles;
+    }
+    
+    /**
+     * Obtiene la lista de items de devolución (método para compatibilidad con el controlador)
+     * @return Lista de detalles de devolución
+     */
+    public List<DetalleDevolucion> getItemsDevolucion() {
+        return detalles_lista;
     }
     
     /**
@@ -116,6 +128,9 @@ public class Devolucion {
      * @param detalle Detalle a agregar
      */
     public void agregarDetalle(DetalleDevolucion detalle) {
+        if (detalles_lista == null) {
+            detalles_lista = new ArrayList<>();
+        }
         detalle.setIdDevolucion(this.id);
         this.detalles_lista.add(detalle);
         recalcularTotales();
@@ -126,7 +141,7 @@ public class Devolucion {
      * @param index Índice del detalle a eliminar
      */
     public void eliminarDetalle(int index) {
-        if (index >= 0 && index < detalles_lista.size()) {
+        if (detalles_lista != null && index >= 0 && index < detalles_lista.size()) {
             detalles_lista.remove(index);
             recalcularTotales();
         }
@@ -138,8 +153,12 @@ public class Devolucion {
     public void recalcularTotales() {
         BigDecimal nuevoTotal = BigDecimal.ZERO;
         
-        for (DetalleDevolucion detalle : detalles_lista) {
-            nuevoTotal = nuevoTotal.add(detalle.getSubtotal());
+        if (detalles_lista != null) {
+            for (DetalleDevolucion detalle : detalles_lista) {
+                if (detalle.getSubtotal() != null) {
+                    nuevoTotal = nuevoTotal.add(detalle.getSubtotal());
+                }
+            }
         }
         
         this.total = nuevoTotal;

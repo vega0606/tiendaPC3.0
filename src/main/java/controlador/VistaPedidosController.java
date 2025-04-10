@@ -1,6 +1,9 @@
 package controlador;
 
 import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 
 import modelo.Pedido;
 import modelo.Proveedor;
@@ -12,7 +15,7 @@ import ventana.VistaPedidos;
  */
 public class VistaPedidosController {
     
-    private VistaPedidosView vista;
+    private VistaPedidos vista;
     private PedidoController pedidoController;
     private ProveedorController proveedorController;
     
@@ -23,7 +26,7 @@ public class VistaPedidosController {
      * @param pedidoController El controlador de pedidos
      * @param proveedorController El controlador de proveedores
      */
-    public VistaPedidosController(VistaPedidosView vista, PedidoController pedidoController, 
+    public VistaPedidosController(VistaPedidos vista, PedidoController pedidoController, 
                                  ProveedorController proveedorController) {
         this.vista = vista;
         this.pedidoController = pedidoController;
@@ -87,7 +90,11 @@ public class VistaPedidosController {
      */
     public void cargarPedidos() {
         List<Pedido> pedidos = pedidoController.obtenerTodosPedidos();
-        vista.mostrarPedidos(pedidos);
+        if (pedidos != null) {
+            vista.mostrarPedidos(pedidos);
+        } else {
+            vista.mostrarMensaje("Error al cargar los pedidos");
+        }
     }
     
     /**
@@ -95,7 +102,11 @@ public class VistaPedidosController {
      */
     private void cargarProveedores() {
         List<Proveedor> proveedores = proveedorController.obtenerTodosProveedores();
-        vista.cargarProveedoresEnComboBox(proveedores);
+        if (proveedores != null) {
+            vista.cargarProveedoresEnComboBox(proveedores);
+        } else {
+            vista.mostrarMensaje("Error al cargar los proveedores");
+        }
     }
     
     /**
@@ -104,7 +115,7 @@ public class VistaPedidosController {
     private void buscarPedidoPorNumero() {
         try {
             String numeroTexto = vista.getTxtBusqueda().getText();
-            if (numeroTexto.isEmpty()) {
+            if (numeroTexto == null || numeroTexto.isEmpty()) {
                 vista.mostrarMensaje("Ingrese un número de pedido para buscar");
                 return;
             }
@@ -170,13 +181,24 @@ public class VistaPedidosController {
      * Filtra los pedidos por estado.
      */
     private void filtrarPedidosPorEstado() {
-        String estado = vista.getComboEstado().getSelectedItem().toString();
+        Object estadoSeleccionado = vista.getComboEstado().getSelectedItem();
         
-        if (estado.equals("Todos")) {
+        if (estadoSeleccionado == null) {
+            vista.mostrarMensaje("Seleccione un estado para filtrar");
+            return;
+        }
+        
+        String estado = estadoSeleccionado.toString();
+        
+        if ("Todos".equals(estado)) {
             cargarPedidos();
         } else {
             List<Pedido> pedidosFiltrados = pedidoController.filtrarPedidosPorEstado(estado);
-            vista.mostrarPedidos(pedidosFiltrados);
+            if (pedidosFiltrados != null) {
+                vista.mostrarPedidos(pedidosFiltrados);
+            } else {
+                vista.mostrarMensaje("Error al filtrar por estado");
+            }
         }
     }
     
@@ -184,15 +206,26 @@ public class VistaPedidosController {
      * Filtra los pedidos por proveedor.
      */
     private void filtrarPedidosPorProveedor() {
-        Proveedor proveedor = (Proveedor) vista.getComboProveedor().getSelectedItem();
+        Object seleccionado = vista.getComboProveedor().getSelectedItem();
         
-        if (proveedor == null) {
+        if (seleccionado == null) {
             vista.mostrarMensaje("Seleccione un proveedor para filtrar");
             return;
         }
         
+        if (!(seleccionado instanceof Proveedor)) {
+            vista.mostrarMensaje("Error: El elemento seleccionado no es un proveedor válido");
+            return;
+        }
+        
+        Proveedor proveedor = (Proveedor) seleccionado;
+        
         List<Pedido> pedidosFiltrados = pedidoController.filtrarPedidosPorProveedor(proveedor.getId());
-        vista.mostrarPedidos(pedidosFiltrados);
+        if (pedidosFiltrados != null) {
+            vista.mostrarPedidos(pedidosFiltrados);
+        } else {
+            vista.mostrarMensaje("Error al filtrar por proveedor");
+        }
     }
     
     /**
@@ -206,7 +239,7 @@ public class VistaPedidosController {
             return;
         }
         
-        if (pedidoSeleccionado.getEstado().equals("Recibido")) {
+        if ("Recibido".equals(pedidoSeleccionado.getEstado())) {
             vista.mostrarMensaje("Este pedido ya ha sido marcado como recibido");
             return;
         }
@@ -215,7 +248,11 @@ public class VistaPedidosController {
         
         if (confirmacion) {
             pedidoSeleccionado.setEstado("Recibido");
-            pedidoSeleccionado.setFechaRecepcion(new java.util.Date());
+            
+            // Uso de LocalDate y conversión a Date si es necesario
+            LocalDate hoy = LocalDate.now();
+            Date fechaRecepcion = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            pedidoSeleccionado.setFechaRecepcion(fechaRecepcion);
             
             boolean actualizado = pedidoController.actualizarPedido(pedidoSeleccionado);
             
@@ -236,14 +273,14 @@ public class VistaPedidosController {
     private void exportarAFormato(String formato) {
         List<Pedido> pedidos = vista.obtenerPedidosMostrados();
         
-        if (pedidos.isEmpty()) {
+        if (pedidos == null || pedidos.isEmpty()) {
             vista.mostrarMensaje("No hay datos para exportar");
             return;
         }
         
         String rutaArchivo = vista.seleccionarRutaGuardado(formato);
         
-        if (rutaArchivo != null) {
+        if (rutaArchivo != null && !rutaArchivo.trim().isEmpty()) {
             boolean exportado = false;
             
             if ("PDF".equals(formato)) {
@@ -268,6 +305,17 @@ public class VistaPedidosController {
      * @return true si se guardó correctamente, false en caso contrario
      */
     public boolean guardarPedido(Pedido pedido, boolean esNuevo) {
+        if (pedido == null) {
+            vista.mostrarMensaje("Error: El pedido no puede ser nulo");
+            return false;
+        }
+        
+        // Validar campos obligatorios
+        if (pedido.getProveedor() == null || pedido.getFechaPedido() == null) {
+            vista.mostrarMensaje("Error: Proveedor y fecha de pedido son obligatorios");
+            return false;
+        }
+        
         boolean resultado;
         
         if (esNuevo) {

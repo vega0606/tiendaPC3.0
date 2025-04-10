@@ -8,13 +8,13 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,12 +22,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.EventListenerList;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-import Controlador.VistaAlertasController;
+import controlador.VistaAlertasController;
 
 /**
  * Vista para la gestión de alertas del sistema
@@ -290,9 +293,77 @@ public class VistaAlertas extends Vista {
     }
     
     /**
+     * Editor base para los editores de celdas
+     */
+    abstract class AbstractCellEditor implements TableCellEditor {
+        private EventListenerList listenerList = new EventListenerList();
+        
+        @Override
+        public Object getCellEditorValue() {
+            return null;
+        }
+        
+        @Override
+        public boolean isCellEditable(EventObject e) {
+            return true;
+        }
+        
+        @Override
+        public boolean shouldSelectCell(EventObject anEvent) {
+            return true;
+        }
+        
+        @Override
+        public boolean stopCellEditing() {
+            fireEditingStopped();
+            return true;
+        }
+        
+        @Override
+        public void cancelCellEditing() {
+            fireEditingCanceled();
+        }
+        
+        @Override
+        public void addCellEditorListener(CellEditorListener l) {
+            listenerList.add(CellEditorListener.class, l);
+        }
+        
+        @Override
+        public void removeCellEditorListener(CellEditorListener l) {
+            listenerList.remove(CellEditorListener.class, l);
+        }
+        
+        protected void fireEditingStopped() {
+            CellEditorListener[] listeners = listenerList.getListeners(CellEditorListener.class);
+            if (listeners != null && listeners.length > 0) {
+                ChangeEvent event = new ChangeEvent(this);
+                for (CellEditorListener listener : listeners) {
+                    listener.editingStopped(event);
+                }
+            }
+        }
+        
+        protected void fireEditingCanceled() {
+            CellEditorListener[] listeners = listenerList.getListeners(CellEditorListener.class);
+            if (listeners != null && listeners.length > 0) {
+                ChangeEvent event = new ChangeEvent(this);
+                for (CellEditorListener listener : listeners) {
+                    listener.editingCanceled(event);
+                }
+            }
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            return null;
+        }
+    }
+    
+    /**
      * Editor personalizado para manejar los eventos de botones en la tabla
      */
-    class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
+    class ButtonEditor extends AbstractCellEditor {
         private JPanel panel;
         private JButton atenderButton;
         private JButton eliminarButton;
@@ -348,64 +419,6 @@ public class VistaAlertas extends Vista {
         @Override
         public Object getCellEditorValue() {
             return "Acciones";
-        }
-    }
-    
-    /**
-     * AbstractCellEditor implementación básica
-     */
-    abstract class AbstractCellEditor implements TableCellEditor {
-        private EventListenerList listenerList = new EventListenerList();
-        
-        @Override
-        public boolean isCellEditable(EventObject e) {
-            return true;
-        }
-        
-        @Override
-        public boolean shouldSelectCell(EventObject anEvent) {
-            return true;
-        }
-        
-        @Override
-        public boolean stopCellEditing() {
-            fireEditingStopped();
-            return true;
-        }
-        
-        @Override
-        public void cancelCellEditing() {
-            fireEditingCanceled();
-        }
-        
-        @Override
-        public void addCellEditorListener(CellEditorListener l) {
-            listenerList.add(CellEditorListener.class, l);
-        }
-        
-        @Override
-        public void removeCellEditorListener(CellEditorListener l) {
-            listenerList.remove(CellEditorListener.class, l);
-        }
-        
-        protected void fireEditingStopped() {
-            CellEditorListener[] listeners = listenerList.getListeners(CellEditorListener.class);
-            if (listeners != null && listeners.length > 0) {
-                ChangeEvent event = new ChangeEvent(this);
-                for (CellEditorListener listener : listeners) {
-                    listener.editingStopped(event);
-                }
-            }
-        }
-        
-        protected void fireEditingCanceled() {
-            CellEditorListener[] listeners = listenerList.getListeners(CellEditorListener.class);
-            if (listeners != null && listeners.length > 0) {
-                ChangeEvent event = new ChangeEvent(this);
-                for (CellEditorListener listener : listeners) {
-                    listener.editingCanceled(event);
-                }
-            }
         }
     }
 }

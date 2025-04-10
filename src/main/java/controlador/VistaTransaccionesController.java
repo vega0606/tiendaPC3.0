@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import modelo.Transaccion;
-import vista.VistaTransacciones;
+import ventana.VistaTransacciones;
 
 /**
  * Controlador para la vista de transacciones.
@@ -12,7 +12,7 @@ import vista.VistaTransacciones;
  */
 public class VistaTransaccionesController {
     
-    private VistaTransaccionesView vista;
+    private VistaTransacciones vista;
     private TransaccionController transaccionController;
     
     /**
@@ -21,7 +21,7 @@ public class VistaTransaccionesController {
      * @param vista La vista de transacciones
      * @param transaccionController El controlador de transacciones
      */
-    public VistaTransaccionesController(VistaTransaccionesView vista, TransaccionController transaccionController) {
+    public VistaTransaccionesController(VistaTransacciones vista, TransaccionController transaccionController) {
         this.vista = vista;
         this.transaccionController = transaccionController;
         
