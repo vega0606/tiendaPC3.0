@@ -224,19 +224,19 @@ public class VistaReportes extends JPanel {
             btnGenerarReporte.addActionListener(e -> {
                 String tipoReporte = (String) comboTipoReporte.getSelectedItem();
                 
-                if (tipoReporte.equals("Ventas por Período")) {
+                if ("Ventas por Período".equals(tipoReporte)) {
                     controller.generarReporteVentasPorPeriodo();
-                } else if (tipoReporte.equals("Productos más Vendidos")) {
+                } else if ("Productos más Vendidos".equals(tipoReporte)) {
                     controller.generarReporteProductosMasVendidos();
-                } else if (tipoReporte.equals("Clientes Frecuentes")) {
+                } else if ("Clientes Frecuentes".equals(tipoReporte)) {
                     controller.generarReporteClientesFrecuentes();
-                } else if (tipoReporte.equals("Inventario Valorizado")) {
+                } else if ("Inventario Valorizado".equals(tipoReporte)) {
                     controller.generarReporteInventarioValorizado();
-                } else if (tipoReporte.equals("Ganancias por Período")) {
+                } else if ("Ganancias por Período".equals(tipoReporte)) {
                     controller.generarReporteGananciasPorPeriodo();
-                } else if (tipoReporte.equals("Productos con Bajo Stock")) {
+                } else if ("Productos con Bajo Stock".equals(tipoReporte)) {
                     controller.generarReporteProductosBajoStock();
-                } else if (tipoReporte.equals("Reporte de Devoluciones")) {
+                } else if ("Reporte de Devoluciones".equals(tipoReporte)) {
                     controller.generarReporteDevoluciones();
                 }
             });

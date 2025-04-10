@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -36,22 +37,27 @@ public class ReporteController {
     }
     
     /**
-     * Genera un reporte de ventas por período
+     * Genera datos para un reporte de ventas por período sin exportar a archivo
      * @param fechaInicio Fecha inicial
      * @param fechaFin Fecha final
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
-     * @return true si la generación fue exitosa
+     * @return Mapa con los datos del reporte o null si hay un error
      */
-    public boolean generarReporteVentasPorPeriodo(LocalDate fechaInicio, LocalDate fechaFin,
-                                                String rutaArchivo, String formato) {
+    public Map<String, Object> generarReporteVentasPorPeriodo(Date fechaInicio, Date fechaFin) {
         try {
+            // Convertir Date a LocalDate
+            LocalDate inicio = fechaInicio.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            LocalDate fin = fechaFin.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+                
             // Obtener facturas del período
-            List<Factura> facturas = facturaController.buscarFacturasPorFecha(fechaInicio, fechaFin);
+            List<Factura> facturas = facturaController.buscarFacturasPorFecha(inicio, fin);
             
             if (facturas.isEmpty()) {
                 logger.warn("No hay facturas en el período seleccionado");
-                return false;
+                return null;
             }
             
             // Calcular totales
@@ -65,39 +71,58 @@ public class ReporteController {
                 }
             }
             
+            // Crear listado de ventas para mostrar en la vista
+            List<Map<String, Object>> ventas = new ArrayList<>();
+            for (Factura factura : facturas) {
+                if (!"Anulada".equals(factura.getEstado())) {
+                    Map<String, Object> venta = new HashMap<>();
+                    venta.put("fecha", factura.getFecha());
+                    venta.put("numeroFactura", factura.getNumero());
+                    venta.put("cliente", factura.getCliente());
+                    venta.put("total", factura.getTotal());
+                    ventas.add(venta);
+                }
+            }
+            
             // Crear mapa con datos del reporte
             Map<String, Object> datos = new HashMap<>();
-            datos.put("fechaInicio", fechaInicio);
-            datos.put("fechaFin", fechaFin);
-            datos.put("facturas", facturas);
-            datos.put("totalVentas", totalVentas);
-            datos.put("totalIVA", totalIVA);
-            datos.put("totalGeneral", totalVentas.add(totalIVA));
+            datos.put("fechaInicio", inicio);
+            datos.put("fechaFin", fin);
+            datos.put("ventas", ventas);
+            datos.put("totalVentas", totalVentas.doubleValue());
+            datos.put("totalIVA", totalIVA.doubleValue());
+            datos.put("totalGeneral", totalVentas.add(totalIVA).doubleValue());
             
-            return exportarReporte(datos, "ReporteVentasPorPeriodo", rutaArchivo, formato);
+            return datos;
         } catch (Exception e) {
-            logger.error("Error al generar reporte de ventas por período: {}", e.getMessage(), e);
-            return false;
+            logger.error("Error al generar datos de reporte de ventas por período: {}", e.getMessage(), e);
+            return null;
         }
     }
     
     /**
-     * Genera un reporte de productos vendidos
+     * Genera datos para un reporte de productos más vendidos
+     * @param cantidad Cantidad de productos a mostrar
      * @param fechaInicio Fecha inicial
      * @param fechaFin Fecha final
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
-     * @return true si la generación fue exitosa
+     * @return Lista con los datos del reporte o null si hay un error
      */
-    public boolean generarReporteProductosVendidos(LocalDate fechaInicio, LocalDate fechaFin,
-                                                 String rutaArchivo, String formato) {
+    public List<Map<String, Object>> generarReporteProductosMasVendidos(int cantidad, Date fechaInicio, Date fechaFin) {
         try {
+            // Convertir Date a LocalDate
+            LocalDate inicio = fechaInicio.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            LocalDate fin = fechaFin.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+                
             // Obtener facturas del período
-            List<Factura> facturas = facturaController.buscarFacturasPorFecha(fechaInicio, fechaFin);
+            List<Factura> facturas = facturaController.buscarFacturasPorFecha(inicio, fin);
             
             if (facturas.isEmpty()) {
                 logger.warn("No hay facturas en el período seleccionado");
-                return false;
+                return null;
             }
             
             // Calcular cantidades por producto
@@ -136,7 +161,7 @@ public class ReporteController {
                     item.put("codigo", codigo);
                     item.put("nombre", producto.getNombre());
                     item.put("cantidad", cantidadesPorProducto.get(codigo));
-                    item.put("ventaTotal", ventasPorProducto.get(codigo));
+                    item.put("totalVendido", ventasPorProducto.get(codigo).doubleValue());
                     
                     productosVendidos.add(item);
                 }
@@ -149,220 +174,324 @@ public class ReporteController {
                 return cantB.compareTo(cantA);
             });
             
-            // Crear mapa con datos del reporte
-            Map<String, Object> datos = new HashMap<>();
-            datos.put("fechaInicio", fechaInicio);
-            datos.put("fechaFin", fechaFin);
-            datos.put("productosVendidos", productosVendidos);
-            
-            return exportarReporte(datos, "ReporteProductosVendidos", rutaArchivo, formato);
-        } catch (Exception e) {
-            logger.error("Error al generar reporte de productos vendidos: {}", e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Genera un reporte de rentabilidad
-     * @param fechaInicio Fecha inicial
-     * @param fechaFin Fecha final
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
-     * @return true si la generación fue exitosa
-     */
-    public boolean generarReporteRentabilidad(LocalDate fechaInicio, LocalDate fechaFin,
-                                            String rutaArchivo, String formato) {
-        try {
-            // Obtener transacciones del período
-            Map<String, BigDecimal> resumen = 
-                transaccionController.obtenerResumenPorTipo(fechaInicio, fechaFin);
-            
-            // Crear mapa con datos del reporte
-            Map<String, Object> datos = new HashMap<>();
-            datos.put("fechaInicio", fechaInicio);
-            datos.put("fechaFin", fechaFin);
-            datos.put("totalVentas", resumen.get("Venta"));
-            datos.put("totalCompras", resumen.get("Compra"));
-            datos.put("totalDevoluciones", resumen.get("Devolución"));
-            datos.put("balance", resumen.get("Balance"));
-            
-            return exportarReporte(datos, "ReporteRentabilidad", rutaArchivo, formato);
-        } catch (Exception e) {
-            logger.error("Error al generar reporte de rentabilidad: {}", e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Genera un reporte de clientes
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
-     * @return true si la generación fue exitosa
-     */
-    public boolean generarReporteClientes(String rutaArchivo, String formato) {
-        try {
-            // Obtener clientes
-            List<Cliente> clientes = clienteController.listarClientes();
-            
-            if (clientes.isEmpty()) {
-                logger.warn("No hay clientes para generar el reporte");
-                return false;
+            // Limitar al número solicitado
+            if (productosVendidos.size() > cantidad) {
+                productosVendidos = productosVendidos.subList(0, cantidad);
             }
             
-            // Crear mapa con datos del reporte
-            Map<String, Object> datos = new HashMap<>();
-            datos.put("fechaGeneracion", LocalDate.now());
-            datos.put("clientes", clientes);
-            
-            return exportarReporte(datos, "ReporteClientes", rutaArchivo, formato);
+            return productosVendidos;
         } catch (Exception e) {
-            logger.error("Error al generar reporte de clientes: {}", e.getMessage(), e);
-            return false;
+            logger.error("Error al generar reporte de productos más vendidos: {}", e.getMessage(), e);
+            return null;
         }
     }
     
     /**
-     * Genera un reporte de inventario
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
-     * @param incluirBajoStock Si true, solo incluye productos con bajo stock
-     * @return true si la generación fue exitosa
+     * Genera datos para un reporte de clientes frecuentes
+     * @param cantidad Cantidad de clientes a mostrar
+     * @param fechaInicio Fecha inicial
+     * @param fechaFin Fecha final
+     * @return Lista con los datos del reporte o null si hay un error
      */
-    public boolean generarReporteInventario(String rutaArchivo, String formato, boolean incluirBajoStock) {
+    public List<Map<String, Object>> generarReporteClientesFrecuentes(int cantidad, Date fechaInicio, Date fechaFin) {
         try {
-            // Obtener productos
-            List<Producto> productos;
+            // Convertir Date a LocalDate
+            LocalDate inicio = fechaInicio.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            LocalDate fin = fechaFin.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+                
+            // Obtener facturas del período
+            List<Factura> facturas = facturaController.buscarFacturasPorFecha(inicio, fin);
             
-            if (incluirBajoStock) {
-                productos = productoController.obtenerProductosBajoStock();
-            } else {
+            if (facturas.isEmpty()) {
+                logger.warn("No hay facturas en el período seleccionado");
+                return null;
+            }
+            
+            // Calcular compras por cliente
+            Map<String, Integer> comprasPorCliente = new HashMap<>();
+            Map<String, BigDecimal> gastosPorCliente = new HashMap<>();
+            Map<String, String> nombresClientes = new HashMap<>();
+            
+            for (Factura factura : facturas) {
+                if (!"Anulada".equals(factura.getEstado())) {
+                    String idCliente = factura.getIdCliente();
+                    String nombreCliente = factura.getCliente().getNombre();
+                    
+                    // Guardar el nombre del cliente
+                    nombresClientes.put(idCliente, nombreCliente);
+                    
+                    // Sumar compras
+                    comprasPorCliente.put(
+                        idCliente, 
+                        comprasPorCliente.getOrDefault(idCliente, 0) + 1
+                    );
+                    
+                    // Sumar gastos
+                    BigDecimal gastoActual = gastosPorCliente.getOrDefault(idCliente, BigDecimal.ZERO);
+                    gastosPorCliente.put(
+                        idCliente,
+                        gastoActual.add(factura.getTotal())
+                    );
+                }
+            }
+            
+            // Crear lista de clientes frecuentes
+            List<Map<String, Object>> clientesFrecuentes = new ArrayList<>();
+            
+            for (String id : comprasPorCliente.keySet()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", id);
+                item.put("nombre", nombresClientes.get(id));
+                item.put("compras", comprasPorCliente.get(id));
+                item.put("totalGastado", gastosPorCliente.get(id).doubleValue());
+                
+                clientesFrecuentes.add(item);
+            }
+            
+            // Ordenar clientes por cantidad de compras (mayor a menor)
+            clientesFrecuentes.sort((a, b) -> {
+                Integer comprasA = (Integer) a.get("compras");
+                Integer comprasB = (Integer) b.get("compras");
+                return comprasB.compareTo(comprasA);
+            });
+            
+            // Limitar al número solicitado
+            if (clientesFrecuentes.size() > cantidad) {
+                clientesFrecuentes = clientesFrecuentes.subList(0, cantidad);
+            }
+            
+            return clientesFrecuentes;
+        } catch (Exception e) {
+            logger.error("Error al generar reporte de clientes frecuentes: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Genera datos para un reporte de inventario valorizado
+     * @return Mapa con los datos del reporte y valor total del inventario
+     */
+    public Map<String, Object> generarReporteInventarioValorizado(List<Producto> productos) {
+        try {
+            if (productos == null) {
                 productos = productoController.listarProductos();
             }
             
             if (productos.isEmpty()) {
                 logger.warn("No hay productos para generar el reporte");
-                return false;
+                return null;
             }
             
-            // Calcular valor total del inventario
-            BigDecimal valorTotal = BigDecimal.ZERO;
+            // Calcular valor del inventario por producto
+            double valorTotal = 0;
+            List<Map<String, Object>> datosProductos = new ArrayList<>();
             
             for (Producto producto : productos) {
-                BigDecimal valorProducto = producto.getPrecioCompra()
-                    .multiply(BigDecimal.valueOf(producto.getStock()));
-                valorTotal = valorTotal.add(valorProducto);
+                double costoUnitario = producto.getPrecioCompra().doubleValue();
+                int stock = producto.getStock();
+                double valorProducto = costoUnitario * stock;
+                
+                Map<String, Object> item = new HashMap<>();
+                item.put("codigo", producto.getCodigo());
+                item.put("nombre", producto.getNombre());
+                item.put("stock", stock);
+                item.put("costoUnitario", costoUnitario);
+                item.put("valorTotal", valorProducto);
+                
+                datosProductos.add(item);
+                valorTotal += valorProducto;
             }
             
             // Crear mapa con datos del reporte
             Map<String, Object> datos = new HashMap<>();
+            datos.put("productos", datosProductos);
             datos.put("fechaGeneracion", LocalDate.now());
-            datos.put("productos", productos);
             datos.put("valorTotal", valorTotal);
-            datos.put("soloStockBajo", incluirBajoStock);
             
-            String nombreReporte = incluirBajoStock ? "ReporteProductosBajoStock" : "ReporteInventario";
-            
-            return exportarReporte(datos, nombreReporte, rutaArchivo, formato);
+            return datos;
         } catch (Exception e) {
-            logger.error("Error al generar reporte de inventario: {}", e.getMessage(), e);
-            return false;
+            logger.error("Error al generar reporte de inventario valorizado: {}", e.getMessage(), e);
+            return null;
         }
     }
     
     /**
-     * Genera un dashboard con estadísticas del sistema
-     * @param rutaArchivo Ruta donde guardar el dashboard
-     * @param formato Formato del dashboard (PDF)
-     * @return true si la generación fue exitosa
+     * Calcula el valor total del inventario
+     * @param productos Lista de productos
+     * @return Valor total del inventario
      */
-    public boolean generarDashboard(String rutaArchivo, String formato) {
+    public double calcularValorTotalInventario(List<Producto> productos) {
+        double valorTotal = 0;
+        for (Producto producto : productos) {
+            valorTotal += producto.getPrecioCompra().doubleValue() * producto.getStock();
+        }
+        return valorTotal;
+    }
+    
+    /**
+     * Genera datos para un reporte de ganancias por período
+     * @param facturas Lista de facturas
+     * @return Mapa con los datos del reporte
+     */
+    public Map<String, Object> generarReporteGananciasPorPeriodo(List<Factura> facturas) {
         try {
-            LocalDate hoy = LocalDate.now();
-            LocalDate inicioMes = hoy.withDayOfMonth(1);
-            LocalDate mesAnterior = inicioMes.minusMonths(1);
+            if (facturas == null || facturas.isEmpty()) {
+                logger.warn("No hay facturas para generar el reporte");
+                return null;
+            }
             
-            // Ventas del mes actual
-            List<Factura> facturasMesActual = 
-                facturaController.buscarFacturasPorFecha(inicioMes, hoy);
+            // Agrupar por período (mes)
+            Map<String, BigDecimal> ventasPorMes = new HashMap<>();
+            Map<String, BigDecimal> costosPorMes = new HashMap<>();
             
-            BigDecimal ventasMesActual = BigDecimal.ZERO;
-            for (Factura factura : facturasMesActual) {
+            for (Factura factura : facturas) {
                 if (!"Anulada".equals(factura.getEstado())) {
-                    ventasMesActual = ventasMesActual.add(factura.getTotal());
+                    LocalDate fecha = factura.getFecha();
+                    String periodo = fecha.getYear() + "-" + fecha.getMonthValue();
+                    
+                    // Sumar ventas
+                    BigDecimal ventaActual = ventasPorMes.getOrDefault(periodo, BigDecimal.ZERO);
+                    ventasPorMes.put(periodo, ventaActual.add(factura.getTotal()));
+                    
+                    // Sumar costos (simulado con un margen del 35%)
+                    BigDecimal costoActual = costosPorMes.getOrDefault(periodo, BigDecimal.ZERO);
+                    BigDecimal costo = factura.getSubtotal().multiply(new BigDecimal("0.65"));
+                    costosPorMes.put(periodo, costoActual.add(costo));
                 }
             }
             
-            // Ventas del mes anterior
-            List<Factura> facturasMesAnterior = 
-                facturaController.buscarFacturasPorFecha(mesAnterior, inicioMes.minusDays(1));
+            // Calcular ganancias por período
+            List<Map<String, Object>> periodos = new ArrayList<>();
+            BigDecimal gananciaTotal = BigDecimal.ZERO;
             
-            BigDecimal ventasMesAnterior = BigDecimal.ZERO;
-            for (Factura factura : facturasMesAnterior) {
-                if (!"Anulada".equals(factura.getEstado())) {
-                    ventasMesAnterior = ventasMesAnterior.add(factura.getTotal());
-                }
+            for (String periodo : ventasPorMes.keySet()) {
+                BigDecimal ventas = ventasPorMes.get(periodo);
+                BigDecimal costos = costosPorMes.get(periodo);
+                BigDecimal ganancia = ventas.subtract(costos);
+                
+                // Calcular margen
+                int margen = ganancia.multiply(new BigDecimal("100"))
+                    .divide(ventas, 0, BigDecimal.ROUND_HALF_UP)
+                    .intValue();
+                
+                Map<String, Object> item = new HashMap<>();
+                item.put("nombre", periodo);
+                item.put("ventas", ventas.doubleValue());
+                item.put("costos", costos.doubleValue());
+                item.put("ganancia", ganancia.doubleValue());
+                item.put("margen", margen);
+                
+                periodos.add(item);
+                gananciaTotal = gananciaTotal.add(ganancia);
             }
             
-            // Calcular variación porcentual
-            BigDecimal variacionVentas;
-            if (ventasMesAnterior.compareTo(BigDecimal.ZERO) > 0) {
-                variacionVentas = ventasMesActual
-                    .subtract(ventasMesAnterior)
-                    .divide(ventasMesAnterior, 4, BigDecimal.ROUND_HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            } else {
-                variacionVentas = BigDecimal.valueOf(100);
-            }
+            // Ordenar períodos cronológicamente
+            periodos.sort(Comparator.comparing(m -> (String) m.get("nombre")));
             
-            // Productos con bajo stock
-            List<Producto> productosBajoStock = productoController.obtenerProductosBajoStock();
-            
-            // Clientes activos
-            List<Cliente> clientesActivos = clienteController.listarClientesPorEstado("Activo");
-            
-            // Pedidos pendientes
-            List<Pedido> pedidosPendientes = pedidoController.buscarPedidosPorEstado("Pendiente");
-            
-            // Crear mapa con datos del dashboard
+            // Crear mapa con datos del reporte
             Map<String, Object> datos = new HashMap<>();
-            datos.put("fechaGeneracion", hoy);
-            datos.put("ventasMesActual", ventasMesActual);
-            datos.put("ventasMesAnterior", ventasMesAnterior);
-            datos.put("variacionVentas", variacionVentas);
-            datos.put("productosBajoStock", productosBajoStock);
-            datos.put("cantidadProductosBajoStock", productosBajoStock.size());
-            datos.put("clientesActivos", clientesActivos.size());
-            datos.put("pedidosPendientes", pedidosPendientes.size());
+            datos.put("periodos", periodos);
+            datos.put("gananciaTotal", gananciaTotal.doubleValue());
             
-            return exportarReporte(datos, "Dashboard", rutaArchivo, formato);
+            return datos;
         } catch (Exception e) {
-            logger.error("Error al generar dashboard: {}", e.getMessage(), e);
-            return false;
+            logger.error("Error al generar reporte de ganancias por período: {}", e.getMessage(), e);
+            return null;
         }
     }
     
     /**
-     * Exporta un reporte en el formato especificado
-     * @param datos Datos del reporte
-     * @param nombreReporte Nombre del reporte
+     * Genera una lista de productos con bajo stock
+     * @param limiteStock Límite de stock
+     * @return Lista de productos con stock por debajo del límite
+     */
+    public List<Producto> generarReporteProductosBajoStock(int limiteStock) {
+        try {
+            List<Producto> productos = productoController.listarProductos();
+            List<Producto> productosBajoStock = new ArrayList<>();
+            
+            for (Producto producto : productos) {
+                if (producto.getStock() <= limiteStock) {
+                    productosBajoStock.add(producto);
+                }
+            }
+            
+            return productosBajoStock;
+        } catch (Exception e) {
+            logger.error("Error al generar reporte de productos con bajo stock: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Genera datos para un reporte de devoluciones
+     * @param fechaInicio Fecha inicial
+     * @param fechaFin Fecha final
+     * @return Mapa con los datos del reporte
+     */
+    public Map<String, Object> generarReporteDevoluciones(Date fechaInicio, Date fechaFin) {
+        try {
+            // Convertir Date a LocalDate
+            LocalDate inicio = fechaInicio.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+            LocalDate fin = fechaFin.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+                
+            // Simulación de datos de devoluciones
+            List<Map<String, Object>> devoluciones = new ArrayList<>();
+            
+            // Simular algunas devoluciones
+            for (int i = 1; i <= 5; i++) {
+                Map<String, Object> devolucion = new HashMap<>();
+                devolucion.put("id", "DEV-" + String.format("%03d", i));
+                devolucion.put("fecha", inicio.plusDays(i));
+                devolucion.put("cliente", "Cliente " + i);
+                devolucion.put("producto", "Producto " + i);
+                devolucion.put("cantidad", i);
+                devolucion.put("motivo", "Defecto de fabricación");
+                devolucion.put("estado", "Procesada");
+                
+                devoluciones.add(devolucion);
+            }
+            
+            // Crear mapa con datos del reporte
+            Map<String, Object> datos = new HashMap<>();
+            datos.put("fechaInicio", inicio);
+            datos.put("fechaFin", fin);
+            datos.put("devoluciones", devoluciones);
+            datos.put("totalDevoluciones", devoluciones.size());
+            datos.put("valorTotal", 1500.0); // Valor simulado
+            
+            return datos;
+        } catch (Exception e) {
+            logger.error("Error al generar reporte de devoluciones: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Exporta un reporte existente al formato especificado
+     * @param tipoReporte Tipo de reporte
+     * @param datosReporte Datos del reporte
      * @param rutaArchivo Ruta donde guardar el reporte
-     * @param formato Formato del reporte (PDF, Excel, CSV)
+     * @param formato Formato de exportación
      * @return true si la exportación fue exitosa
      */
-    private boolean exportarReporte(Map<String, Object> datos, String nombreReporte,
-                                   String rutaArchivo, String formato) {
+    public boolean exportarReporte(String tipoReporte, Object datosReporte, String rutaArchivo, String formato) {
         try {
-            // Añadir información general
-            datos.put("nombreReporte", nombreReporte);
-            datos.put("fechaExportacion", LocalDate.now());
-            
             // Generar nombre de archivo si no se especificó
             if (rutaArchivo == null || rutaArchivo.trim().isEmpty()) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
                 String fechaStr = LocalDate.now().format(formatter);
                 rutaArchivo = System.getProperty("user.home") + 
                              File.separator + "Reportes" + 
-                             File.separator + nombreReporte + "_" + fechaStr;
+                             File.separator + tipoReporte + "_" + fechaStr;
             }
             
             // Asegurar extensión correcta
@@ -378,13 +507,16 @@ public class ReporteController {
             }
             
             // Exportar según formato
+            Map<String, Object> datosExportar = new HashMap<>();
+            datosExportar.put("tipoReporte", tipoReporte);
+            datosExportar.put("datos", datosReporte);
+            datosExportar.put("fechaExportacion", LocalDate.now());
+            
             switch (formato.toUpperCase()) {
                 case "PDF":
-                    return exportarPDF(datos, rutaArchivo);
+                    return exportarPDF(datosExportar, rutaArchivo);
                 case "EXCEL":
-                    return exportarExcel(datos, rutaArchivo);
-                case "CSV":
-                    return exportarCSV(datos, rutaArchivo);
+                    return exportarExcel(datosExportar, rutaArchivo);
                 default:
                     logger.error("Formato de reporte no soportado: {}", formato);
                     return false;
@@ -409,7 +541,7 @@ public class ReporteController {
         try (FileOutputStream fos = new FileOutputStream(rutaArchivo)) {
             // Aquí iría la lógica real de exportación usando JasperReports
             // Por simplicidad, solo escribimos un mensaje
-            String mensaje = "Reporte: " + datos.get("nombreReporte") + 
+            String mensaje = "Reporte: " + datos.get("tipoReporte") + 
                            "\nFecha: " + datos.get("fechaExportacion");
             fos.write(mensaje.getBytes());
             return true;
@@ -433,36 +565,12 @@ public class ReporteController {
         try (FileOutputStream fos = new FileOutputStream(rutaArchivo)) {
             // Aquí iría la lógica real de exportación usando Apache POI
             // Por simplicidad, solo escribimos un mensaje
-            String mensaje = "Reporte: " + datos.get("nombreReporte") + 
+            String mensaje = "Reporte: " + datos.get("tipoReporte") + 
                            "\nFecha: " + datos.get("fechaExportacion");
             fos.write(mensaje.getBytes());
             return true;
         } catch (Exception e) {
             logger.error("Error al exportar a Excel: {}", e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Exporta un reporte en formato CSV
-     * @param datos Datos del reporte
-     * @param rutaArchivo Ruta donde guardar el reporte
-     * @return true si la exportación fue exitosa
-     */
-    private boolean exportarCSV(Map<String, Object> datos, String rutaArchivo) {
-        // Implementación de exportación a CSV
-        // Esta es una implementación simulada
-        logger.info("Exportando reporte a CSV: {}", rutaArchivo);
-        
-        try (FileOutputStream fos = new FileOutputStream(rutaArchivo)) {
-            // Aquí iría la lógica real de exportación a CSV
-            // Por simplicidad, solo escribimos un mensaje
-            String mensaje = "Reporte: " + datos.get("nombreReporte") + 
-                           "\nFecha: " + datos.get("fechaExportacion");
-            fos.write(mensaje.getBytes());
-            return true;
-        } catch (Exception e) {
-            logger.error("Error al exportar a CSV: {}", e.getMessage(), e);
             return false;
         }
     }
