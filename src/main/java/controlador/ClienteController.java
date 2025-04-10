@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -75,8 +75,16 @@ public class ClienteController {
             return clienteDAO.listarTodos();
         } catch (Exception e) {
             logger.error("Error al listar clientes: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return listaVacia();
         }
+    }
+    
+    /**
+     * Retorna una lista vacía de clientes
+     * @return Lista vacía de clientes
+     */
+    public List<Cliente> listaVacia() {
+        return Collections.emptyList();
     }
     
     /**
@@ -118,7 +126,7 @@ public class ClienteController {
             return clienteDAO.buscarPorNombre(nombre);
         } catch (Exception e) {
             logger.error("Error al buscar clientes por nombre: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return listaVacia();
         }
     }
     
@@ -161,7 +169,7 @@ public class ClienteController {
             return clienteDAO.listarPorEstado(estado);
         } catch (Exception e) {
             logger.error("Error al listar clientes por estado: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return listaVacia();
         }
     }
     

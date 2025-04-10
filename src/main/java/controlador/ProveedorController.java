@@ -5,7 +5,6 @@ import DAO.ProveedorDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -78,8 +77,17 @@ public class ProveedorController {
             return proveedorDAO.listarTodos();
         } catch (Exception e) {
             logger.error("Error al listar proveedores: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return proveedorDAO.listaVacia();
         }
+    }
+    
+    /**
+     * Método alias para obtener todos los proveedores.
+     * Utilizado por VistaPedidosController.
+     * @return Lista de proveedores
+     */
+    public List<Proveedor> obtenerTodosProveedores() {
+        return listarProveedores();
     }
     
     /**
@@ -121,7 +129,7 @@ public class ProveedorController {
             return proveedorDAO.buscarPorNombre(termino);
         } catch (Exception e) {
             logger.error("Error al buscar proveedores por nombre: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return proveedorDAO.listaVacia();
         }
     }
     
@@ -149,7 +157,7 @@ public class ProveedorController {
             return proveedorDAO.buscarPorCategoria(categoria);
         } catch (Exception e) {
             logger.error("Error al listar proveedores por categoría: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return proveedorDAO.listaVacia();
         }
     }
     
@@ -163,7 +171,7 @@ public class ProveedorController {
             return proveedorDAO.listarPorEstado(estado);
         } catch (Exception e) {
             logger.error("Error al listar proveedores por estado: {}", e.getMessage(), e);
-            return new ArrayList<>();
+            return proveedorDAO.listaVacia();
         }
     }
     

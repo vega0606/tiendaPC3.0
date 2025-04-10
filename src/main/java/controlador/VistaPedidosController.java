@@ -4,9 +4,11 @@ import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.ArrayList;
 
 import modelo.Pedido;
 import modelo.Proveedor;
+import modelo.DetallePedido;
 import ventana.VistaPedidos;
 
 /**
@@ -89,12 +91,9 @@ public class VistaPedidosController {
      * Carga todos los pedidos en la tabla de la vista.
      */
     public void cargarPedidos() {
-        List<Pedido> pedidos = pedidoController.obtenerTodosPedidos();
-        if (pedidos != null) {
-            vista.mostrarPedidos(pedidos);
-        } else {
-            vista.mostrarMensaje("Error al cargar los pedidos");
-        }
+        List<Pedido> pedidos = pedidoController.listarPedidos();
+        // listarPedidos ya devuelve un ArrayList vacío si hay error, no puede ser null
+        vista.mostrarPedidos(pedidos);
     }
     
     /**
@@ -120,16 +119,16 @@ public class VistaPedidosController {
                 return;
             }
             
-            int numeroPedido = Integer.parseInt(numeroTexto);
-            Pedido pedido = pedidoController.buscarPedidoPorNumero(numeroPedido);
+            // El PedidoController utiliza String como número de pedido, no int
+            Pedido pedido = pedidoController.obtenerPedido(numeroTexto);
             
             if (pedido != null) {
                 vista.mostrarPedido(pedido);
             } else {
-                vista.mostrarMensaje("No se encontró ningún pedido con el número: " + numeroPedido);
+                vista.mostrarMensaje("No se encontró ningún pedido con el número: " + numeroTexto);
             }
-        } catch (NumberFormatException e) {
-            vista.mostrarMensaje("El número de pedido debe ser un número entero");
+        } catch (Exception e) {
+            vista.mostrarMensaje("Error al buscar el pedido: " + e.getMessage());
         }
     }
     
@@ -163,13 +162,17 @@ public class VistaPedidosController {
             boolean confirmacion = vista.mostrarConfirmacion("¿Está seguro de eliminar este pedido?");
             
             if (confirmacion) {
-                boolean eliminado = pedidoController.eliminarPedido(pedidoSeleccionado.getNumero());
+                // No hay método directo para eliminar, pero podemos cancelar el pedido
+                boolean eliminado = pedidoController.cancelarPedido(
+                    pedidoSeleccionado.getNumero(), 
+                    "Eliminado por el usuario"
+                );
                 
                 if (eliminado) {
-                    vista.mostrarMensaje("Pedido eliminado correctamente");
+                    vista.mostrarMensaje("Pedido cancelado correctamente");
                     cargarPedidos();
                 } else {
-                    vista.mostrarMensaje("No se pudo eliminar el pedido");
+                    vista.mostrarMensaje("No se pudo cancelar el pedido");
                 }
             }
         } else {
@@ -193,12 +196,9 @@ public class VistaPedidosController {
         if ("Todos".equals(estado)) {
             cargarPedidos();
         } else {
-            List<Pedido> pedidosFiltrados = pedidoController.filtrarPedidosPorEstado(estado);
-            if (pedidosFiltrados != null) {
-                vista.mostrarPedidos(pedidosFiltrados);
-            } else {
-                vista.mostrarMensaje("Error al filtrar por estado");
-            }
+            List<Pedido> pedidosFiltrados = pedidoController.buscarPedidosPorEstado(estado);
+            // buscarPedidosPorEstado ya devuelve ArrayList vacío en caso de error
+            vista.mostrarPedidos(pedidosFiltrados);
         }
     }
     
@@ -220,12 +220,9 @@ public class VistaPedidosController {
         
         Proveedor proveedor = (Proveedor) seleccionado;
         
-        List<Pedido> pedidosFiltrados = pedidoController.filtrarPedidosPorProveedor(proveedor.getId());
-        if (pedidosFiltrados != null) {
-            vista.mostrarPedidos(pedidosFiltrados);
-        } else {
-            vista.mostrarMensaje("Error al filtrar por proveedor");
-        }
+        List<Pedido> pedidosFiltrados = pedidoController.buscarPedidosPorProveedor(proveedor.getId());
+        // buscarPedidosPorProveedor ya devuelve ArrayList vacío en caso de error
+        vista.mostrarPedidos(pedidosFiltrados);
     }
     
     /**
@@ -239,24 +236,22 @@ public class VistaPedidosController {
             return;
         }
         
-        if ("Recibido".equals(pedidoSeleccionado.getEstado())) {
-            vista.mostrarMensaje("Este pedido ya ha sido marcado como recibido");
+        // Verificamos si el pedido está en estado "Enviado"
+        if (!"Enviado".equals(pedidoSeleccionado.getEstado())) {
+            if ("Entregado".equals(pedidoSeleccionado.getEstado())) {
+                vista.mostrarMensaje("Este pedido ya ha sido marcado como recibido");
+            } else {
+                vista.mostrarMensaje("Solo los pedidos en estado 'Enviado' pueden marcarse como recibidos");
+            }
             return;
         }
         
         boolean confirmacion = vista.mostrarConfirmacion("¿Confirma que ha recibido este pedido?");
         
         if (confirmacion) {
-            pedidoSeleccionado.setEstado("Recibido");
+            boolean recibido = pedidoController.confirmarRecepcionPedido(pedidoSeleccionado.getNumero());
             
-            // Uso de LocalDate y conversión a Date si es necesario
-            LocalDate hoy = LocalDate.now();
-            Date fechaRecepcion = Date.from(hoy.atStartOfDay(ZoneId.systemDefault()).toInstant());
-            pedidoSeleccionado.setFechaRecepcion(fechaRecepcion);
-            
-            boolean actualizado = pedidoController.actualizarPedido(pedidoSeleccionado);
-            
-            if (actualizado) {
+            if (recibido) {
                 vista.mostrarMensaje("Pedido marcado como recibido correctamente");
                 cargarPedidos();
             } else {
@@ -283,16 +278,18 @@ public class VistaPedidosController {
         if (rutaArchivo != null && !rutaArchivo.trim().isEmpty()) {
             boolean exportado = false;
             
-            if ("PDF".equals(formato)) {
-                exportado = pedidoController.exportarAPDF(pedidos, rutaArchivo);
-            } else if ("Excel".equals(formato)) {
-                exportado = pedidoController.exportarAExcel(pedidos, rutaArchivo);
-            }
-            
-            if (exportado) {
-                vista.mostrarMensaje("Datos exportados correctamente a " + formato);
-            } else {
-                vista.mostrarMensaje("Error al exportar a " + formato);
+            // PedidoController no tiene métodos de exportación, debemos crear una implementación propia
+            // o implementarla en otra clase, como un servicio de exportación.
+            try {
+                // Aquí se podría implementar la exportación o delegarla a otra clase
+                // Por ahora, informamos al usuario que la funcionalidad no está disponible
+                vista.mostrarMensaje("La funcionalidad de exportación a " + formato + 
+                    " no está implementada en el controlador actual");
+                
+                // TODO: Implementar o integrar la exportación a diferentes formatos
+                exportado = false;
+            } catch (Exception e) {
+                vista.mostrarMensaje("Error al exportar a " + formato + ": " + e.getMessage());
             }
         }
     }
@@ -311,17 +308,38 @@ public class VistaPedidosController {
         }
         
         // Validar campos obligatorios
-        if (pedido.getProveedor() == null || pedido.getFechaPedido() == null) {
-            vista.mostrarMensaje("Error: Proveedor y fecha de pedido son obligatorios");
+        if (pedido.getProveedor() == null) {
+            vista.mostrarMensaje("Error: El proveedor es obligatorio");
             return false;
         }
         
-        boolean resultado;
+        boolean resultado = false;
         
         if (esNuevo) {
-            resultado = pedidoController.crearPedido(pedido);
+            LocalDate fechaEntrega = pedido.getFechaEntrega();
+            String observaciones = pedido.getObservaciones();
+            
+            // Verificar que existan detalles en el pedido
+            if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
+                vista.mostrarMensaje("Error: El pedido debe tener al menos un detalle");
+                return false;
+            }
+            
+            // Llamar al método apropiado del PedidoController
+            Pedido nuevoPedido = pedidoController.crearPedido(
+                pedido.getProveedor(), 
+                fechaEntrega, 
+                observaciones, 
+                pedido.getDetalles()
+            );
+            
+            resultado = (nuevoPedido != null);
         } else {
-            resultado = pedidoController.actualizarPedido(pedido);
+            // Para actualizar el estado del pedido
+            resultado = pedidoController.actualizarEstadoPedido(
+                pedido.getNumero(), 
+                pedido.getEstado()
+            );
         }
         
         if (resultado) {
