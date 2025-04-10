@@ -96,6 +96,8 @@ public class VistaReportes extends JPanel {
         
         // Configurar listeners
         configurarListeners();
+        
+        
     }
     
     protected void inicializarPanel() {
@@ -856,4 +858,7 @@ public class VistaReportes extends JPanel {
    public JButton getBtnReporteDevoluciones() {
        return btnGenerarReporte;
    }
+
+
+
 }

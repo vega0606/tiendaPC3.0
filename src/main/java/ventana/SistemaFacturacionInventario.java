@@ -12,7 +12,6 @@ import ventana.SistemaFacturacionInventario;
 import ventana.VistaAlertas;
 import ventana.VistaClientes;
 import ventana.VistaDevoluciones;
-import ventana.VistaExportImport;
 import ventana.VistaFacturacion;
 import ventana.VistaInventario;
 import ventana.VistaPedidos;
@@ -51,36 +50,34 @@ public class SistemaFacturacionInventario extends JFrame {
         vistas.put("Inventario", vistaInventario.getPanel());
         
         VistaReportes vistaReportes = new VistaReportes();
-        mainPanel.add(vistaReportes.getPanel(), "Reportes");
-        vistas.put("Reportes", vistaReportes.getPanel());
+      //  mainPanel.add(vistaReportes.getPanel(), "Reportes");
+       // vistas.put("Reportes", vistaReportes.getPanel());
         
         VistaClientes vistaClientes = new VistaClientes();
-        mainPanel.add(vistaClientes.getPanel(), "Clientes/Proveedores");
-        vistas.put("Clientes/Proveedores", vistaClientes.getPanel());
+        //mainPanel.add(vistaClientes.getPanel(), "Clientes/Proveedores");
+        //vistas.put("Clientes/Proveedores", vistaClientes.getPanel());
         
         VistaPedidos vistaPedidos = new VistaPedidos();
-        mainPanel.add(vistaPedidos.getPanel(), "Pedidos");
-        vistas.put("Pedidos", vistaPedidos.getPanel());
+        //mainPanel.add(vistaPedidos.getPanel(), "Pedidos");
+        //vistas.put("Pedidos", vistaPedidos.getPanel());
         
         VistaDevoluciones vistaDevoluciones = new VistaDevoluciones();
-        mainPanel.add(vistaDevoluciones.getPanel(), "Devoluciones");
-        vistas.put("Devoluciones", vistaDevoluciones.getPanel());
+        //mainPanel.add(vistaDevoluciones.getPanel(), "Devoluciones");
+        //vistas.put("Devoluciones", vistaDevoluciones.getPanel());
         
         VistaAlertas vistaAlertas = new VistaAlertas();
         mainPanel.add(vistaAlertas.getPanel(), "Alertas");
         vistas.put("Alertas", vistaAlertas.getPanel());
         
         VistaTransacciones vistaTransacciones = new VistaTransacciones();
-        mainPanel.add(vistaTransacciones.getPanel(), "Transacciones");
-        vistas.put("Transacciones", vistaTransacciones.getPanel());
+       // mainPanel.add(vistaTransacciones.getPanel(), "Transacciones");
+     //   vistas.put("Transacciones", vistaTransacciones.getPanel());
         
         VistaUsuarios vistaUsuarios = new VistaUsuarios();
         mainPanel.add(vistaUsuarios.getPanel(), "Usuarios");
         vistas.put("Usuarios", vistaUsuarios.getPanel());
         
-        VistaExportImport vistaExportImport = new VistaExportImport();
-        mainPanel.add(vistaExportImport.getPanel(), "Export/Import");
-        vistas.put("Export/Import", vistaExportImport.getPanel());
+     
         
         // Layout principal
         setLayout(new BorderLayout());

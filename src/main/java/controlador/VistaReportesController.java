@@ -112,7 +112,7 @@ public class VistaReportesController {
     /**
      * Genera un reporte de productos más vendidos.
      */
-    private void generarReporteProductosMasVendidos() {
+    public void ReporteProductosMasVendidos() {
         try {
             int cantidad = vista.getCantidadTopProductos();
             Date fechaInicio = vista.getFechaInicio().getDate();
@@ -252,7 +252,7 @@ public class VistaReportesController {
      * 
      * @param formato El formato de exportación ("PDF" o "Excel")
      */
-    private void exportarReporteActual(String formato) {
+    public void exportarReporteActual(String formato) {
         if (!vista.hayReporteGenerado()) {
             vista.mostrarMensaje("Primero debe generar un reporte para exportarlo");
             return;

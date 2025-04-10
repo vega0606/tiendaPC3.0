@@ -1,5 +1,4 @@
-package ventana;
-
+package ventana;  
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -9,9 +8,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
 
-import controlador.VistaTransaccionesController;
+import controlador.VistaTransaccionesController;  
 import controlador.TransaccionController;
-import modelo.Transaccion;
+import modelo.Transaccion;  
 import com.toedter.calendar.JDateChooser;
 
 /**
@@ -78,10 +77,8 @@ public class VistaTransacciones extends JPanel {
         inicializarPanel();
         
         // Inicializar controlador
-        controller = new VistaTransaccionesController(this, transaccionController);
-        
-        // Configurar listeners
-        configurarListeners();
+        this.controller = new VistaTransaccionesController(this, transaccionController);
+        // El controlador ya configura los listeners, así que no necesitamos llamar a configurarListeners()
     }
     
     /**
@@ -112,33 +109,6 @@ public class VistaTransacciones extends JPanel {
         
         // Mostrar vista de listado por defecto
         cardLayout.show(mainContentPanel, "LISTADO");
-    }
-    
-    /**
-     * Configura los listeners para los botones y otros componentes.
-     */
-    private void configurarListeners() {
-        if (controller != null) {
-            // Botones del panel de listado
-            btnBuscar.addActionListener(e -> controller.buscarTransaccionPorId());
-            btnMostrarTodas.addActionListener(e -> controller.cargarTransacciones());
-            btnNuevaTransaccion.addActionListener(e -> controller.abrirFormularioNuevaTransaccion());
-            btnEditar.addActionListener(e -> controller.editarTransaccionSeleccionada());
-            btnEliminar.addActionListener(e -> controller.eliminarTransaccionSeleccionada());
-            btnFiltrarPorTipo.addActionListener(e -> controller.filtrarTransaccionesPorTipo());
-            btnFiltrarPorFecha.addActionListener(e -> controller.filtrarTransaccionesPorFecha());
-            btnFiltrarPorMonto.addActionListener(e -> controller.filtrarTransaccionesPorMonto());
-            btnExportarPDF.addActionListener(e -> controller.exportarAFormato("PDF"));
-            btnExportarExcel.addActionListener(e -> controller.exportarAFormato("Excel"));
-            
-            // Botones del panel de formulario
-            btnGuardar.addActionListener(e -> {
-                Transaccion transaccion = obtenerTransaccionDesdeFormulario();
-                controller.guardarTransaccion(transaccion, !editando);
-            });
-            
-            btnCancelar.addActionListener(e -> mostrarListado());
-        }
     }
     
     /**
@@ -420,7 +390,10 @@ public class VistaTransacciones extends JPanel {
      * Muestra el panel de listado.
      */
     public void mostrarListado() {
-        cardLayout.show(getParent(), "LISTADO");
+        Container parent = getParent();
+        if (parent != null) {
+            cardLayout.show(parent, "LISTADO");
+        }
     }
     
     /**
@@ -460,7 +433,10 @@ public class VistaTransacciones extends JPanel {
             titleLabel.setText("Editar Transacción");
         }
         
-        cardLayout.show(getParent(), "FORMULARIO");
+        Container parent = getParent();
+        if (parent != null) {
+            cardLayout.show(parent, "FORMULARIO");
+        }
     }
     
     /**
@@ -645,7 +621,6 @@ public class VistaTransacciones extends JPanel {
      */
     public void setController(VistaTransaccionesController controller) {
         this.controller = controller;
-        configurarListeners();
     }
     
     // Getters para que el controlador pueda acceder a los componentes

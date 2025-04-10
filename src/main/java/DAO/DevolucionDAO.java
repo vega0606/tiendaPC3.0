@@ -7,6 +7,7 @@ import modelo.Factura;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,6 +34,15 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             conn = DatabaseConnector.getConnection();
             conn.setAutoCommit(false); // Iniciar transacción
             
+            // Verificar que la factura existe
+            if (devolucion.getNumeroFactura() != null) {
+                Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                if (factura == null) {
+                    throw new SQLException("La factura con número " + devolucion.getNumeroFactura() + " no existe");
+                }
+                devolucion.setFactura(factura); // Establecer la factura completa
+            }
+            
             // Insertar la devolución
             String sql = "INSERT INTO devoluciones (id, numero_factura, fecha, motivo, detalles, " +
                          "total, id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -42,7 +52,7 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
                 stmt.setString(2, devolucion.getNumeroFactura());
                 stmt.setDate(3, Date.valueOf(devolucion.getFecha()));
                 stmt.setString(4, devolucion.getMotivo());
-                stmt.setString(5, devolucion.getDetalles1());
+                stmt.setString(5, devolucion.getDetalles());
                 stmt.setBigDecimal(6, devolucion.getTotal());
                 stmt.setInt(7, devolucion.getIdUsuario());
                 
@@ -53,11 +63,14 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
                 }
                 
                 // Insertar los detalles de la devolución
-                for (DetalleDevolucion detalle : devolucion.getDetalles()) {
-                    insertarDetalleDevolucion(conn, detalle);
-                    
-                    // Actualizar el stock del producto (devolver al inventario)
-                    productoDAO.actualizarStock(detalle.getCodigoProducto(), detalle.getCantidad());
+                List<DetalleDevolucion> itemsDevolucion = devolucion.getItemsDevolucion();
+                if (itemsDevolucion != null) {
+                    for (DetalleDevolucion detalle : itemsDevolucion) {
+                        insertarDetalleDevolucion(conn, detalle);
+                        
+                        // Actualizar el stock del producto (devolver al inventario)
+                        productoDAO.actualizarStock(detalle.getCodigoProducto(), detalle.getCantidad());
+                    }
                 }
                 
                 // Commit de la transacción
@@ -138,11 +151,12 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
                     Devolucion devolucion = mapearDevolucion(rs);
                     
                     // Cargar los detalles de la devolución
-                    devolucion.setDetalles(buscarDetallesPorDevolucion(id));
+                    devolucion.setDetallesLista(buscarDetallesPorDevolucion(id));
                     
-                    // Cargar la factura
+                    // Cargar la factura completa
                     if (devolucion.getNumeroFactura() != null) {
-                        devolucion.setFactura(facturaDAO.buscarPorId(devolucion.getNumeroFactura()));
+                        Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                        devolucion.setFactura(factura);
                     }
                     
                     return devolucion;
@@ -201,7 +215,15 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
              ResultSet rs = stmt.executeQuery(sql)) {
             
             while (rs.next()) {
-                devoluciones.add(mapearDevolucion(rs));
+                Devolucion devolucion = mapearDevolucion(rs);
+                
+                // Cargar la factura para cada devolución
+                if (devolucion.getNumeroFactura() != null) {
+                    Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                    devolucion.setFactura(factura);
+                }
+                
+                devoluciones.add(devolucion);
             }
             
             return devoluciones;
@@ -211,32 +233,102 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
         }
     }
     
+    /**
+     * Listar todas las devoluciones con sus detalles
+     * @return Lista completa de devoluciones con detalles
+     * @throws Exception
+     */
+    public List<Devolucion> listarTodosConDetalles() throws Exception {
+        List<Devolucion> devoluciones = listarTodos();
+        
+        // Cargar detalles para cada devolución
+        for (Devolucion devolucion : devoluciones) {
+            devolucion.setDetallesLista(buscarDetallesPorDevolucion(devolucion.getId()));
+        }
+        
+        return devoluciones;
+    }
+    
     @Override
     public Devolucion actualizar(Devolucion devolucion) throws Exception {
-        String sql = "UPDATE devoluciones SET numero_factura = ?, fecha = ?, motivo = ?, " +
-                    "detalles = ?, total = ? WHERE id = ?";
+        Connection conn = null;
         
-        try (Connection conn = DatabaseConnector.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            conn = DatabaseConnector.getConnection();
+            conn.setAutoCommit(false); // Iniciar transacción
             
-            stmt.setString(1, devolucion.getNumeroFactura());
-            stmt.setDate(2, Date.valueOf(devolucion.getFecha()));
-            stmt.setString(3, devolucion.getMotivo());
-            stmt.setString(4, devolucion.getDetalles1());  // Aquí está el campo detalles
-            stmt.setBigDecimal(5, devolucion.getTotal());
-            stmt.setString(6, devolucion.getId());
-            
-            int affectedRows = stmt.executeUpdate();
-            
-            if (affectedRows == 0) {
-                throw new SQLException("La actualización de la devolución falló, devolución no encontrada");
+            // Verificar que la factura existe si se está cambiando
+            if (devolucion.getNumeroFactura() != null) {
+                Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                if (factura == null) {
+                    throw new SQLException("La factura con número " + devolucion.getNumeroFactura() + " no existe");
+                }
+                devolucion.setFactura(factura); // Establecer la factura completa
             }
             
-            logger.info("Devolución actualizada con ID: {}", devolucion.getId());
-            return devolucion;
+            // Actualizar la devolución
+            String sql = "UPDATE devoluciones SET numero_factura = ?, fecha = ?, motivo = ?, " +
+                       "detalles = ?, total = ? WHERE id = ?";
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, devolucion.getNumeroFactura());
+                stmt.setDate(2, Date.valueOf(devolucion.getFecha()));
+                stmt.setString(3, devolucion.getMotivo());
+                stmt.setString(4, devolucion.getDetalles());
+                stmt.setBigDecimal(5, devolucion.getTotal());
+                stmt.setString(6, devolucion.getId());
+                
+                int affectedRows = stmt.executeUpdate();
+                
+                if (affectedRows == 0) {
+                    throw new SQLException("La actualización de la devolución falló, devolución no encontrada");
+                }
+                
+                // Si se actualizan los detalles, primero eliminar los existentes y luego insertar los nuevos
+                List<DetalleDevolucion> itemsDevolucion = devolucion.getItemsDevolucion();
+                if (itemsDevolucion != null) {
+                    // Eliminar detalles existentes
+                    String sqlDeleteDetalles = "DELETE FROM detalle_devoluciones WHERE id_devolucion = ?";
+                    try (PreparedStatement stmtDelete = conn.prepareStatement(sqlDeleteDetalles)) {
+                        stmtDelete.setString(1, devolucion.getId());
+                        stmtDelete.executeUpdate();
+                    }
+                    
+                    // Insertar nuevos detalles
+                    for (DetalleDevolucion detalle : itemsDevolucion) {
+                        detalle.setIdDevolucion(devolucion.getId());
+                        insertarDetalleDevolucion(conn, detalle);
+                    }
+                }
+                
+                // Commit de la transacción
+                conn.commit();
+                
+                logger.info("Devolución actualizada con ID: {}", devolucion.getId());
+                return devolucion;
+            }
         } catch (SQLException e) {
+            // Rollback en caso de error
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    logger.error("Error al hacer rollback: {}", ex.getMessage());
+                }
+            }
+            
             logger.error("Error al actualizar devolución: {}", e.getMessage());
             throw e;
+        } finally {
+            // Restaurar auto-commit
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    logger.error("Error al restaurar auto-commit: {}", ex.getMessage());
+                }
+            }
         }
     }
     
@@ -258,8 +350,11 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             }
             
             // Restaurar stock de productos (restar lo que se devolvió al eliminar la devolución)
-            for (DetalleDevolucion detalle : devolucion.getDetalles()) {
-                productoDAO.actualizarStock(detalle.getCodigoProducto(), -detalle.getCantidad());
+            List<DetalleDevolucion> itemsDevolucion = devolucion.getItemsDevolucion();
+            if (itemsDevolucion != null) {
+                for (DetalleDevolucion detalle : itemsDevolucion) {
+                    productoDAO.actualizarStock(detalle.getCodigoProducto(), -detalle.getCantidad());
+                }
             }
             
             // Eliminar los detalles
@@ -328,7 +423,16 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    devoluciones.add(mapearDevolucion(rs));
+                    Devolucion devolucion = mapearDevolucion(rs);
+                    
+                    // Cargar detalles
+                    devolucion.setDetallesLista(buscarDetallesPorDevolucion(devolucion.getId()));
+                    
+                    // Cargar la factura, que ya sabemos cuál es
+                    Factura factura = facturaDAO.buscarPorId(numeroFactura);
+                    devolucion.setFactura(factura);
+                    
+                    devoluciones.add(devolucion);
                 }
             }
             
@@ -358,7 +462,15 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    devoluciones.add(mapearDevolucion(rs));
+                    Devolucion devolucion = mapearDevolucion(rs);
+                    
+                    // Cargar la factura para cada devolución
+                    if (devolucion.getNumeroFactura() != null) {
+                        Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                        devolucion.setFactura(factura);
+                    }
+                    
+                    devoluciones.add(devolucion);
                 }
             }
             
@@ -367,6 +479,24 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             logger.error("Error al buscar devoluciones por fecha: {}", e.getMessage());
             throw e;
         }
+    }
+    
+    /**
+     * Buscar devoluciones por fecha con detalles
+     * @param fechaInicio Fecha inicial
+     * @param fechaFin Fecha final
+     * @return Lista de devoluciones en el rango de fechas con sus detalles
+     * @throws Exception
+     */
+    public List<Devolucion> buscarPorFechaConDetalles(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        List<Devolucion> devoluciones = buscarPorFecha(fechaInicio, fechaFin);
+        
+        // Cargar detalles para cada devolución
+        for (Devolucion devolucion : devoluciones) {
+            devolucion.setDetallesLista(buscarDetallesPorDevolucion(devolucion.getId()));
+        }
+        
+        return devoluciones;
     }
     
     /**
@@ -439,6 +569,13 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
         
         return detalle;
     }
+    
+    /**
+     * Buscar devoluciones por motivo
+     * @param motivo Motivo de la devolución
+     * @return Lista de devoluciones que coinciden con el motivo
+     * @throws Exception
+     */
     public List<Devolucion> buscarPorMotivo(String motivo) throws Exception {
         String sql = "SELECT * FROM devoluciones WHERE motivo LIKE ? ORDER BY fecha DESC";
         List<Devolucion> devoluciones = new ArrayList<>();
@@ -452,8 +589,14 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
                 while (rs.next()) {
                     Devolucion devolucion = mapearDevolucion(rs);
                     
-                    // Opcional: cargar detalles si los necesitas
-                    devolucion.setDetalles(buscarDetallesPorDevolucion(devolucion.getId()));
+                    // Cargar detalles
+                    devolucion.setDetallesLista(buscarDetallesPorDevolucion(devolucion.getId()));
+                    
+                    // Cargar la factura
+                    if (devolucion.getNumeroFactura() != null) {
+                        Factura factura = facturaDAO.buscarPorId(devolucion.getNumeroFactura());
+                        devolucion.setFactura(factura);
+                    }
                     
                     devoluciones.add(devolucion);
                 }
@@ -462,6 +605,36 @@ public class DevolucionDAO implements DAO<Devolucion, String> {
             return devoluciones;
         } catch (SQLException e) {
             logger.error("Error al buscar devoluciones por motivo: {}", e.getMessage());
+            throw e;
+        }
+    }
+    
+    /**
+     * Obtiene el total de devoluciones por período
+     * @param fechaInicio Fecha inicial
+     * @param fechaFin Fecha final
+     * @return Total de devoluciones en el período
+     * @throws Exception
+     */
+    public BigDecimal obtenerTotalDevolucionesPorPeriodo(LocalDate fechaInicio, LocalDate fechaFin) throws Exception {
+        String sql = "SELECT SUM(total) AS total FROM devoluciones WHERE fecha BETWEEN ? AND ?";
+        
+        try (Connection conn = DatabaseConnector.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setDate(1, Date.valueOf(fechaInicio));
+            stmt.setDate(2, Date.valueOf(fechaFin));
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal total = rs.getBigDecimal("total");
+                    return total != null ? total : BigDecimal.ZERO;
+                } else {
+                    return BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error al obtener total de devoluciones por período: {}", e.getMessage());
             throw e;
         }
     }
