@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -15,6 +16,14 @@ import java.util.List;
  */
 public class ProveedorDAO implements DAO<Proveedor, String> {
     private static final Logger logger = LoggerFactory.getLogger(ProveedorDAO.class);
+    
+    /**
+     * Retorna una lista vacía de proveedores
+     * @return Lista vacía de proveedores
+     */
+    public List<Proveedor> listaVacia() {
+        return Collections.emptyList();
+    }
     
     @Override
     public Proveedor crear(Proveedor proveedor) throws Exception {
@@ -76,7 +85,7 @@ public class ProveedorDAO implements DAO<Proveedor, String> {
     @Override
     public List<Proveedor> listarTodos() throws Exception {
         String sql = "SELECT * FROM proveedores ORDER BY empresa";
-        List<Proveedor> proveedores = new ArrayList<>();
+        List<Proveedor> proveedores = new LinkedList<>();
         
         try (Connection conn = DatabaseConnector.getConnection();
              Statement stmt = conn.createStatement();
@@ -158,7 +167,7 @@ public class ProveedorDAO implements DAO<Proveedor, String> {
      */
     public List<Proveedor> buscarPorNombre(String nombre) throws Exception {
         String sql = "SELECT * FROM proveedores WHERE empresa LIKE ? OR contacto LIKE ? ORDER BY empresa";
-        List<Proveedor> proveedores = new ArrayList<>();
+        List<Proveedor> proveedores = new LinkedList<>();
         
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -214,7 +223,7 @@ public class ProveedorDAO implements DAO<Proveedor, String> {
      */
     public List<Proveedor> buscarPorCategoria(String categoria) throws Exception {
         String sql = "SELECT * FROM proveedores WHERE categoria = ? ORDER BY empresa";
-        List<Proveedor> proveedores = new ArrayList<>();
+        List<Proveedor> proveedores = new LinkedList<>();
         
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -315,9 +324,16 @@ public class ProveedorDAO implements DAO<Proveedor, String> {
         
         return proveedor;
     }
+    
+    /**
+     * Listar proveedores por estado
+     * @param estado Estado de los proveedores ('Activo', 'Inactivo', etc.)
+     * @return Lista de proveedores con el estado especificado
+     * @throws Exception
+     */
     public List<Proveedor> listarPorEstado(String estado) throws Exception {
         String sql = "SELECT * FROM proveedores WHERE estado = ? ORDER BY empresa";
-        List<Proveedor> proveedores = new ArrayList<>();
+        List<Proveedor> proveedores = new LinkedList<>();
         
         try (Connection conn = DatabaseConnector.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

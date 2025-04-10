@@ -30,10 +30,10 @@ public class VistaClientes extends JPanel {
     private JPanel listadoPanel;
     private JPanel formularioPanel;
     private CardLayout cardLayout;
+    private JPanel mainPanel;
     
     // Campos del formulario
     private JTextField nombreField;
-    private JTextField apellidoField;
     private JTextField rucField;
     private JTextField telefonoField;
     private JTextField direccionField;
@@ -78,7 +78,7 @@ public class VistaClientes extends JPanel {
         
         // Panel principal con CardLayout para cambiar entre vistas
         cardLayout = new CardLayout();
-        JPanel mainPanel = new JPanel(cardLayout);
+        mainPanel = new JPanel(cardLayout);
         
         // Crear panel de listado
         listadoPanel = crearPanelListado();
@@ -165,7 +165,7 @@ public class VistaClientes extends JPanel {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         
         searchPanel.add(new JLabel("Buscar por:"));
-        criterioComboBox = new JComboBox<>(new String[] {"Nombre", "Apellido", "RUC/NIT", "Email"});
+        criterioComboBox = new JComboBox<>(new String[] {"Nombre", "RUC/NIT", "Email"});
         searchPanel.add(criterioComboBox);
         
         busquedaField = new JTextField(20);
@@ -177,7 +177,7 @@ public class VistaClientes extends JPanel {
         searchPanel.add(buscarButton);
         
         // Tabla de clientes
-        String[] columnNames = {"ID", "Nombre", "Apellido", "RUC/NIT", "Teléfono", "Email", "Dirección"};
+        String[] columnNames = {"ID", "Nombre", "RUC/NIT", "Teléfono", "Email", "Dirección"};
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -267,22 +267,9 @@ public class VistaClientes extends JPanel {
         nombreField = new JTextField(20);
         formPanel.add(nombreField, gbc);
         
-        // Apellido
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        formPanel.add(new JLabel("Apellido:"), gbc);
-        
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        apellidoField = new JTextField(20);
-        formPanel.add(apellidoField, gbc);
-        
         // RUC/NIT
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 1;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         formPanel.add(new JLabel("RUC/NIT:"), gbc);
@@ -295,7 +282,7 @@ public class VistaClientes extends JPanel {
         
         // Teléfono
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         formPanel.add(new JLabel("Teléfono:"), gbc);
@@ -308,7 +295,7 @@ public class VistaClientes extends JPanel {
         
         // Email
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         formPanel.add(new JLabel("Email:"), gbc);
@@ -321,7 +308,7 @@ public class VistaClientes extends JPanel {
         
         // Dirección
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 4;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         formPanel.add(new JLabel("Dirección:"), gbc);
@@ -356,10 +343,7 @@ public class VistaClientes extends JPanel {
      * Muestra el panel de listado.
      */
     public void mostrarListado() {
-        Component parent = getParent();
-        if (parent instanceof JPanel) {
-            cardLayout.show((JPanel) parent, "LISTADO");
-        }
+        cardLayout.show(mainPanel, "LISTADO");
     }
     
     /**
@@ -374,10 +358,7 @@ public class VistaClientes extends JPanel {
         JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
         titleLabel.setText("Nuevo Cliente");
         
-        Component parent = getParent();
-        if (parent instanceof JPanel) {
-            cardLayout.show((JPanel) parent, "FORMULARIO");
-        }
+        cardLayout.show(mainPanel, "FORMULARIO");
     }
     
     /**
@@ -392,7 +373,6 @@ public class VistaClientes extends JPanel {
         
         // Cargar datos del cliente en el formulario
         nombreField.setText(cliente.getNombre());
-        apellidoField.setText(cliente.getApellido());
         rucField.setText(cliente.getRuc());
         telefonoField.setText(cliente.getTelefono());
         emailField.setText(cliente.getEmail());
@@ -402,10 +382,7 @@ public class VistaClientes extends JPanel {
         JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
         titleLabel.setText("Editar Cliente");
         
-        Component parent = getParent();
-        if (parent instanceof JPanel) {
-            cardLayout.show((JPanel) parent, "FORMULARIO");
-        }
+        cardLayout.show(mainPanel, "FORMULARIO");
     }
     
     /**
@@ -413,7 +390,6 @@ public class VistaClientes extends JPanel {
      */
     private void limpiarFormulario() {
         nombreField.setText("");
-        apellidoField.setText("");
         rucField.setText("");
         telefonoField.setText("");
         emailField.setText("");
@@ -433,7 +409,6 @@ public class VistaClientes extends JPanel {
         }
         
         cliente.setNombre(nombreField.getText().trim());
-        cliente.setApellido(apellidoField.getText().trim());
         cliente.setRuc(rucField.getText().trim());
         cliente.setTelefono(telefonoField.getText().trim());
         cliente.setEmail(emailField.getText().trim());
@@ -455,7 +430,6 @@ public class VistaClientes extends JPanel {
             model.addRow(new Object[] {
                 cliente.getId(),
                 cliente.getNombre(),
-                cliente.getApellido(),
                 cliente.getRuc(),
                 cliente.getTelefono(),
                 cliente.getEmail(),
@@ -477,13 +451,12 @@ public class VistaClientes extends JPanel {
         }
         
         Cliente cliente = new Cliente();
-        cliente.setId((Integer) clientesTable.getValueAt(selectedRow, 0));
+        cliente.setId((String) clientesTable.getValueAt(selectedRow, 0));
         cliente.setNombre((String) clientesTable.getValueAt(selectedRow, 1));
-        cliente.setApellido((String) clientesTable.getValueAt(selectedRow, 2));
-        cliente.setRuc((String) clientesTable.getValueAt(selectedRow, 3));
-        cliente.setTelefono((String) clientesTable.getValueAt(selectedRow, 4));
-        cliente.setEmail((String) clientesTable.getValueAt(selectedRow, 5));
-        cliente.setDireccion((String) clientesTable.getValueAt(selectedRow, 6));
+        cliente.setRuc((String) clientesTable.getValueAt(selectedRow, 2));
+        cliente.setTelefono((String) clientesTable.getValueAt(selectedRow, 3));
+        cliente.setEmail((String) clientesTable.getValueAt(selectedRow, 4));
+        cliente.setDireccion((String) clientesTable.getValueAt(selectedRow, 5));
         
         return cliente;
     }
@@ -558,6 +531,78 @@ public class VistaClientes extends JPanel {
     
     public JTable getClientesTable() {
         return clientesTable;
+    }
+    
+    /**
+     * Método para compatibilidad con VistaClientesController que maneja tanto clientes como proveedores.
+     * @return null, ya que esta vista no maneja proveedores
+     */
+    public JTable getProveedoresTable() {
+        return null; // Esta vista no maneja proveedores
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return Panel principal
+     */
+    public JPanel getPanel() {
+        return this;
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return null, ya que esta vista no tiene pestañas
+     */
+    public JTabbedPane getTabbedPane() {
+        return null; // Esta vista no usa pestañas
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return null, ya que esta vista no tiene campo de búsqueda específico para proveedores
+     */
+    public JTextField getProvSearchField() {
+        return null; // Esta vista no tiene campo de búsqueda para proveedores
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return null, ya que esta vista no tiene botón de búsqueda específico para proveedores
+     */
+    public JButton getProvSearchButton() {
+        return null; // Esta vista no tiene botón de búsqueda para proveedores
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return null, ya que esta vista no tiene botón para nuevo proveedor
+     */
+    public JButton getNewProvButton() {
+        return null; // Esta vista no tiene botón para nuevo proveedor
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return Campo de búsqueda para clientes
+     */
+    public JTextField getClienteSearchField() {
+        return busquedaField;
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return Botón de búsqueda para clientes
+     */
+    public JButton getClienteSearchButton() {
+        return buscarButton;
+    }
+    
+    /**
+     * Método adicional para compatibilidad.
+     * @return Botón para nuevo cliente
+     */
+    public JButton getNewClientButton() {
+        return agregarButton;
     }
     
     public JButton getBuscarButton() {
