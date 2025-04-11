@@ -31,7 +31,7 @@ public class MenuLateral {
 	        String[] menuItems = {
 	            "Facturación", "Inventario", "Reportes", "Clientes/Proveedores", 
 	            "Pedidos", "Devoluciones", "Alertas", "Transacciones", 
-	            "Usuarios", "Export/Import"
+	            "Usuarios"
 	        };
 	        
 	        for (String item : menuItems) {

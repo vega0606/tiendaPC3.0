@@ -25,8 +25,7 @@ public class VistaReportes {
     // Componentes comunes
     private JComboBox<String> comboTipoReporte;
     private JButton btnGenerarReporte;
-    private JButton btnExportarPDF;
-    private JButton btnExportarExcel;
+   
     private JTextField fechaInicio; // Cambiado de JDateChooser para evitar dependencia externa
     private JTextField fechaFin;    // Cambiado de JDateChooser para evitar dependencia externa
     
@@ -136,17 +135,7 @@ public class VistaReportes {
         // Panel de acciones para exportación
         JPanel panelAcciones = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
-        btnExportarPDF = new JButton("Exportar a PDF");
-        btnExportarPDF.setBackground(new Color(183, 28, 28));
-        btnExportarPDF.setForeground(Color.WHITE);
-        btnExportarPDF.setEnabled(false);
-        panelAcciones.add(btnExportarPDF);
-        
-        btnExportarExcel = new JButton("Exportar a Excel");
-        btnExportarExcel.setBackground(new Color(46, 125, 50));
-        btnExportarExcel.setForeground(Color.WHITE);
-        btnExportarExcel.setEnabled(false);
-        panelAcciones.add(btnExportarExcel);
+       
         
         // Componer todo
         JPanel panelInferior = new JPanel(new BorderLayout());
@@ -194,19 +183,7 @@ public class VistaReportes {
                 JOptionPane.INFORMATION_MESSAGE);
         });
         
-        btnExportarPDF.addActionListener(e -> {
-            JOptionPane.showMessageDialog(mainPanel, 
-                "Función para exportar a PDF", 
-                "Información", 
-                JOptionPane.INFORMATION_MESSAGE);
-        });
-        
-        btnExportarExcel.addActionListener(e -> {
-            JOptionPane.showMessageDialog(mainPanel, 
-                "Función para exportar a Excel", 
-                "Información", 
-                JOptionPane.INFORMATION_MESSAGE);
-        });
+       
     }
     
     /**
@@ -334,8 +311,7 @@ public class VistaReportes {
         hayReporteGenerado = false;
         tipoReporteActual = tipoReporte;
         datosReporteActual = null;
-        btnExportarPDF.setEnabled(false);
-        btnExportarExcel.setEnabled(false);
+       
         
         // Ocultar resultados
         limpiarResultados();
@@ -397,13 +373,7 @@ public class VistaReportes {
         return btnGenerarReporte;
     }
     
-    public JButton getBtnExportarPDF() {
-        return btnExportarPDF;
-    }
-    
-    public JButton getBtnExportarExcel() {
-        return btnExportarExcel;
-    }
+   
     
     public JTextField getFechaInicio() {
         return fechaInicio;

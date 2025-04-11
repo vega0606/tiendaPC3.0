@@ -813,13 +813,9 @@ public class VistaUsuarios extends Vista {
         return btnFiltrarPorRol;
     }
     
-    public JButton getBtnExportarPDF() {
-        return btnExportarPDF;
-    }
+   
     
-    public JButton getBtnExportarExcel() {
-        return btnExportarExcel;
-    }
+   
     
     public JComboBox<String> getComboRol() {
         return comboRol;
