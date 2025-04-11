@@ -1,351 +1,344 @@
 package controlador;
 
-import java.util.List;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.ArrayList;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-import modelo.Pedido;
-import modelo.Proveedor;
-import modelo.DetallePedido;
 import ventana.VistaPedidos;
 
+import java.awt.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+
 /**
- * Controlador para la vista de pedidos.
- * Gestiona la interacción entre la vista de pedidos y el modelo de datos.
+ * Controlador para la vista de pedidos
  */
 public class VistaPedidosController {
     
     private VistaPedidos vista;
-    private PedidoController pedidoController;
-    private ProveedorController proveedorController;
+    private List<Pedido> pedidos;
     
     /**
-     * Constructor del controlador de vista de pedidos.
-     * 
-     * @param vista La vista de pedidos
-     * @param pedidoController El controlador de pedidos
-     * @param proveedorController El controlador de proveedores
+     * Constructor del controlador
+     * @param vista La vista de pedidos asociada
      */
-    public VistaPedidosController(VistaPedidos vista, PedidoController pedidoController, 
-                                 ProveedorController proveedorController) {
+    public VistaPedidosController(VistaPedidos vista) {
         this.vista = vista;
-        this.pedidoController = pedidoController;
-        this.proveedorController = proveedorController;
-        
-        // Inicializar los listeners y componentes de la vista
-        inicializarVista();
+        this.pedidos = new ArrayList<>();
+        cargarDatosDePrueba();
+        actualizarTabla();
     }
     
     /**
-     * Inicializa los componentes de la vista y configura los listeners.
+     * Carga datos de prueba para la tabla de pedidos
      */
-    private void inicializarVista() {
-        // Cargar los pedidos al iniciar la vista
-        cargarPedidos();
+    private void cargarDatosDePrueba() {
+        // Esto simularía la carga desde una base de datos
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         
-        // Cargar proveedores para el combobox
-        cargarProveedores();
-        
-        // Configurar listeners para los botones de la vista
-        configurarListeners();
-    }
-    
-    /**
-     * Configura los listeners para los botones y componentes interactivos de la vista.
-     */
-    private void configurarListeners() {
-        // Listener para el botón de buscar pedido
-        vista.getBtnBuscar().addActionListener(e -> buscarPedidoPorNumero());
-        
-        // Listener para el botón de mostrar todos los pedidos
-        vista.getBtnMostrarTodos().addActionListener(e -> cargarPedidos());
-        
-        // Listener para el botón de nuevo pedido
-        vista.getBtnNuevoPedido().addActionListener(e -> abrirFormularioNuevoPedido());
-        
-        // Listener para el botón de editar pedido
-        vista.getBtnEditar().addActionListener(e -> editarPedidoSeleccionado());
-        
-        // Listener para el botón de eliminar pedido
-        vista.getBtnEliminar().addActionListener(e -> eliminarPedidoSeleccionado());
-        
-        // Listener para filtro por estado
-        vista.getBtnFiltrarPorEstado().addActionListener(e -> filtrarPedidosPorEstado());
-        
-        // Listener para filtro por proveedor
-        vista.getBtnFiltrarPorProveedor().addActionListener(e -> filtrarPedidosPorProveedor());
-        
-        // Listener para cambiar estado a "Recibido"
-        vista.getBtnMarcarRecibido().addActionListener(e -> marcarPedidoComoRecibido());
-        
-        // Listener para exportar a PDF
-        vista.getBtnExportarPDF().addActionListener(e -> exportarAFormato("PDF"));
-        
-        // Listener para exportar a Excel
-        vista.getBtnExportarExcel().addActionListener(e -> exportarAFormato("Excel"));
-    }
-    
-    /**
-     * Carga todos los pedidos en la tabla de la vista.
-     */
-    public void cargarPedidos() {
-        List<Pedido> pedidos = pedidoController.listarPedidos();
-        // listarPedidos ya devuelve un ArrayList vacío si hay error, no puede ser null
-        vista.mostrarPedidos(pedidos);
-    }
-    
-    /**
-     * Carga todos los proveedores para el combobox de la vista.
-     */
-    private void cargarProveedores() {
-        List<Proveedor> proveedores = proveedorController.obtenerTodosProveedores();
-        if (proveedores != null) {
-            vista.cargarProveedoresEnComboBox(proveedores);
-        } else {
-            vista.mostrarMensaje("Error al cargar los proveedores");
-        }
-    }
-    
-    /**
-     * Busca un pedido por su número y lo muestra en la vista.
-     */
-    private void buscarPedidoPorNumero() {
         try {
-            String numeroTexto = vista.getTxtBusqueda().getText();
-            if (numeroTexto == null || numeroTexto.isEmpty()) {
-                vista.mostrarMensaje("Ingrese un número de pedido para buscar");
-                return;
-            }
-            
-            // El PedidoController utiliza String como número de pedido, no int
-            Pedido pedido = pedidoController.obtenerPedido(numeroTexto);
-            
-            if (pedido != null) {
-                vista.mostrarPedido(pedido);
-            } else {
-                vista.mostrarMensaje("No se encontró ningún pedido con el número: " + numeroTexto);
-            }
+            pedidos.add(new Pedido(1, "Juan Pérez", sdf.parse("2025-04-10"), 1200.00, "Pendiente"));
+            pedidos.add(new Pedido(2, "María López", sdf.parse("2025-04-09"), 850.50, "En proceso"));
+            pedidos.add(new Pedido(3, "Carlos Gómez", sdf.parse("2025-04-08"), 3500.00, "Completado"));
+            pedidos.add(new Pedido(4, "Ana Martínez", sdf.parse("2025-04-07"), 450.75, "Cancelado"));
+            pedidos.add(new Pedido(5, "Pedro Rodríguez", sdf.parse("2025-04-06"), 1740.25, "Pendiente"));
         } catch (Exception e) {
-            vista.mostrarMensaje("Error al buscar el pedido: " + e.getMessage());
+            System.err.println("Error al cargar datos de prueba: " + e.getMessage());
         }
     }
     
     /**
-     * Abre el formulario para crear un nuevo pedido.
+     * Crea un nuevo pedido
      */
-    private void abrirFormularioNuevoPedido() {
-        vista.mostrarFormularioPedido(null);
-    }
-    
-    /**
-     * Edita el pedido seleccionado en la tabla.
-     */
-    private void editarPedidoSeleccionado() {
-        Pedido pedidoSeleccionado = vista.obtenerPedidoSeleccionado();
+    public void nuevoPedido() {
+        // Aquí se mostraría un diálogo para ingresar los datos del pedido
+        JDialog dialogo = new JDialog((Frame) SwingUtilities.getWindowAncestor(vista.getPanel()), "Nuevo Pedido", true);
+        dialogo.setSize(400, 300);
+        dialogo.setLocationRelativeTo(vista.getPanel());
+        dialogo.setLayout(new BorderLayout());
         
-        if (pedidoSeleccionado != null) {
-            vista.mostrarFormularioPedido(pedidoSeleccionado);
-        } else {
-            vista.mostrarMensaje("Seleccione un pedido para editar");
-        }
-    }
-    
-    /**
-     * Elimina el pedido seleccionado en la tabla.
-     */
-    private void eliminarPedidoSeleccionado() {
-        Pedido pedidoSeleccionado = vista.obtenerPedidoSeleccionado();
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        if (pedidoSeleccionado != null) {
-            boolean confirmacion = vista.mostrarConfirmacion("¿Está seguro de eliminar este pedido?");
-            
-            if (confirmacion) {
-                // No hay método directo para eliminar, pero podemos cancelar el pedido
-                boolean eliminado = pedidoController.cancelarPedido(
-                    pedidoSeleccionado.getNumero(), 
-                    "Eliminado por el usuario"
-                );
-                
-                if (eliminado) {
-                    vista.mostrarMensaje("Pedido cancelado correctamente");
-                    cargarPedidos();
-                } else {
-                    vista.mostrarMensaje("No se pudo cancelar el pedido");
-                }
-            }
-        } else {
-            vista.mostrarMensaje("Seleccione un pedido para eliminar");
-        }
-    }
-    
-    /**
-     * Filtra los pedidos por estado.
-     */
-    private void filtrarPedidosPorEstado() {
-        Object estadoSeleccionado = vista.getComboEstado().getSelectedItem();
+        panel.add(new JLabel("Cliente:"));
+        JTextField txtCliente = new JTextField();
+        panel.add(txtCliente);
         
-        if (estadoSeleccionado == null) {
-            vista.mostrarMensaje("Seleccione un estado para filtrar");
-            return;
-        }
+        panel.add(new JLabel("Fecha:"));
+        JTextField txtFecha = new JTextField(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        txtFecha.setEditable(false);
+        panel.add(txtFecha);
         
-        String estado = estadoSeleccionado.toString();
+        panel.add(new JLabel("Total:"));
+        JTextField txtTotal = new JTextField();
+        panel.add(txtTotal);
         
-        if ("Todos".equals(estado)) {
-            cargarPedidos();
-        } else {
-            List<Pedido> pedidosFiltrados = pedidoController.buscarPedidosPorEstado(estado);
-            // buscarPedidosPorEstado ya devuelve ArrayList vacío en caso de error
-            vista.mostrarPedidos(pedidosFiltrados);
-        }
-    }
-    
-    /**
-     * Filtra los pedidos por proveedor.
-     */
-    private void filtrarPedidosPorProveedor() {
-        Object seleccionado = vista.getComboProveedor().getSelectedItem();
+        panel.add(new JLabel("Estado:"));
+        JComboBox<String> comboEstado = new JComboBox<>(new String[]{"Pendiente", "En proceso", "Completado", "Cancelado"});
+        panel.add(comboEstado);
         
-        if (seleccionado == null) {
-            vista.mostrarMensaje("Seleccione un proveedor para filtrar");
-            return;
-        }
+        dialogo.add(panel, BorderLayout.CENTER);
         
-        if (!(seleccionado instanceof Proveedor)) {
-            vista.mostrarMensaje("Error: El elemento seleccionado no es un proveedor válido");
-            return;
-        }
+        JPanel panelBotones = new JPanel();
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnCancelar = new JButton("Cancelar");
         
-        Proveedor proveedor = (Proveedor) seleccionado;
-        
-        List<Pedido> pedidosFiltrados = pedidoController.buscarPedidosPorProveedor(proveedor.getId());
-        // buscarPedidosPorProveedor ya devuelve ArrayList vacío en caso de error
-        vista.mostrarPedidos(pedidosFiltrados);
-    }
-    
-    /**
-     * Marca el pedido seleccionado como recibido.
-     */
-    private void marcarPedidoComoRecibido() {
-        Pedido pedidoSeleccionado = vista.obtenerPedidoSeleccionado();
-        
-        if (pedidoSeleccionado == null) {
-            vista.mostrarMensaje("Seleccione un pedido para marcar como recibido");
-            return;
-        }
-        
-        // Verificamos si el pedido está en estado "Enviado"
-        if (!"Enviado".equals(pedidoSeleccionado.getEstado())) {
-            if ("Entregado".equals(pedidoSeleccionado.getEstado())) {
-                vista.mostrarMensaje("Este pedido ya ha sido marcado como recibido");
-            } else {
-                vista.mostrarMensaje("Solo los pedidos en estado 'Enviado' pueden marcarse como recibidos");
-            }
-            return;
-        }
-        
-        boolean confirmacion = vista.mostrarConfirmacion("¿Confirma que ha recibido este pedido?");
-        
-        if (confirmacion) {
-            boolean recibido = pedidoController.confirmarRecepcionPedido(pedidoSeleccionado.getNumero());
-            
-            if (recibido) {
-                vista.mostrarMensaje("Pedido marcado como recibido correctamente");
-                cargarPedidos();
-            } else {
-                vista.mostrarMensaje("Error al marcar el pedido como recibido");
-            }
-        }
-    }
-    
-    /**
-     * Exporta los pedidos mostrados a un formato específico.
-     * 
-     * @param formato El formato de exportación ("PDF" o "Excel")
-     */
-    private void exportarAFormato(String formato) {
-        List<Pedido> pedidos = vista.obtenerPedidosMostrados();
-        
-        if (pedidos == null || pedidos.isEmpty()) {
-            vista.mostrarMensaje("No hay datos para exportar");
-            return;
-        }
-        
-        String rutaArchivo = vista.seleccionarRutaGuardado(formato);
-        
-        if (rutaArchivo != null && !rutaArchivo.trim().isEmpty()) {
-            boolean exportado = false;
-            
-            // PedidoController no tiene métodos de exportación, debemos crear una implementación propia
-            // o implementarla en otra clase, como un servicio de exportación.
+        btnGuardar.addActionListener(e -> {
             try {
-                // Aquí se podría implementar la exportación o delegarla a otra clase
-                // Por ahora, informamos al usuario que la funcionalidad no está disponible
-                vista.mostrarMensaje("La funcionalidad de exportación a " + formato + 
-                    " no está implementada en el controlador actual");
+                String cliente = txtCliente.getText();
+                Date fecha = new SimpleDateFormat("yyyy-MM-dd").parse(txtFecha.getText());
+                double total = Double.parseDouble(txtTotal.getText());
+                String estado = (String) comboEstado.getSelectedItem();
                 
-                // TODO: Implementar o integrar la exportación a diferentes formatos
-                exportado = false;
-            } catch (Exception e) {
-                vista.mostrarMensaje("Error al exportar a " + formato + ": " + e.getMessage());
+                if (cliente.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(dialogo,
+                        "El nombre del cliente no puede estar vacío",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Generar un nuevo ID
+                int nuevoId = pedidos.size() > 0 ? 
+                    pedidos.get(pedidos.size() - 1).getId() + 1 : 1;
+                
+                // Crear y agregar el nuevo pedido
+                Pedido nuevoPedido = new Pedido(nuevoId, cliente, fecha, total, estado);
+                pedidos.add(nuevoPedido);
+                
+                // Actualizar la tabla
+                actualizarTabla();
+                
+                JOptionPane.showMessageDialog(dialogo, 
+                    "Pedido registrado correctamente", 
+                    "Éxito", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                dialogo.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialogo, 
+                    "El total debe ser un número válido", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, 
+                    "Error al guardar el pedido: " + ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
             }
+        });
+        
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+        
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCancelar);
+        
+        dialogo.add(panelBotones, BorderLayout.SOUTH);
+        dialogo.setVisible(true);
+    }
+    
+    /**
+     * Elimina un pedido seleccionado
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     */
+    public void eliminarPedido(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < pedidos.size()) {
+            int confirmar = JOptionPane.showConfirmDialog(vista.getPanel(),
+                "¿Está seguro de eliminar este pedido?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION);
+            
+            if (confirmar == JOptionPane.YES_OPTION) {
+                pedidos.remove(filaSeleccionada);
+                actualizarTabla();
+                JOptionPane.showMessageDialog(vista.getPanel(),
+                    "Pedido eliminado correctamente",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar un pedido",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
     
     /**
-     * Guarda un pedido nuevo o actualizado.
-     * 
-     * @param pedido El pedido a guardar
-     * @param esNuevo Indica si es un nuevo pedido o una actualización
-     * @return true si se guardó correctamente, false en caso contrario
+     * Modifica el estado de un pedido seleccionado
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
      */
-    public boolean guardarPedido(Pedido pedido, boolean esNuevo) {
-        if (pedido == null) {
-            vista.mostrarMensaje("Error: El pedido no puede ser nulo");
-            return false;
-        }
-        
-        // Validar campos obligatorios
-        if (pedido.getProveedor() == null) {
-            vista.mostrarMensaje("Error: El proveedor es obligatorio");
-            return false;
-        }
-        
-        boolean resultado = false;
-        
-        if (esNuevo) {
-            LocalDate fechaEntrega = pedido.getFechaEntrega();
-            String observaciones = pedido.getObservaciones();
+    public void modificarEstadoPedido(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < pedidos.size()) {
+            String[] opciones = {"Pendiente", "En proceso", "Completado", "Cancelado"};
+            String nuevoEstado = (String) JOptionPane.showInputDialog(
+                vista.getPanel(),
+                "Seleccione el nuevo estado:",
+                "Modificar Estado",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                pedidos.get(filaSeleccionada).getEstado());
             
-            // Verificar que existan detalles en el pedido
-            if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
-                vista.mostrarMensaje("Error: El pedido debe tener al menos un detalle");
-                return false;
+            if (nuevoEstado != null) {
+                pedidos.get(filaSeleccionada).setEstado(nuevoEstado);
+                actualizarTabla();
+                JOptionPane.showMessageDialog(vista.getPanel(),
+                    "Estado modificado correctamente",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
             }
-            
-            // Llamar al método apropiado del PedidoController
-            Pedido nuevoPedido = pedidoController.crearPedido(
-                pedido.getProveedor(), 
-                fechaEntrega, 
-                observaciones, 
-                pedido.getDetalles()
-            );
-            
-            resultado = (nuevoPedido != null);
         } else {
-            // Para actualizar el estado del pedido
-            resultado = pedidoController.actualizarEstadoPedido(
-                pedido.getNumero(), 
-                pedido.getEstado()
-            );
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar un pedido",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Muestra el detalle de un pedido seleccionado
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     */
+    public void verDetallePedido(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < pedidos.size()) {
+            Pedido pedido = pedidos.get(filaSeleccionada);
+            
+            // Aquí se mostraría un diálogo con los detalles del pedido
+            // Por ahora solo mostramos un mensaje
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Detalles del Pedido #" + pedido.getId() + "\n\n" +
+                "Cliente: " + pedido.getCliente() + "\n" +
+                "Fecha: " + sdf.format(pedido.getFecha()) + "\n" +
+                "Total: $" + String.format("%.2f", pedido.getTotal()) + "\n" +
+                "Estado: " + pedido.getEstado(),
+                "Detalle de Pedido",
+                JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar un pedido",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Busca pedidos según un criterio
+     * @param criterioBusqueda El texto a buscar
+     */
+    public void buscarPedidos(String criterioBusqueda) {
+        if (criterioBusqueda == null || criterioBusqueda.trim().isEmpty()) {
+            actualizarTabla();
+            return;
         }
         
-        if (resultado) {
-            cargarPedidos();
+        criterioBusqueda = criterioBusqueda.toLowerCase();
+        List<Pedido> resultados = new ArrayList<>();
+        
+        for (Pedido p : pedidos) {
+            if (String.valueOf(p.getId()).contains(criterioBusqueda) ||
+                p.getCliente().toLowerCase().contains(criterioBusqueda) ||
+                p.getEstado().toLowerCase().contains(criterioBusqueda) ||
+                String.valueOf(p.getTotal()).contains(criterioBusqueda)) {
+                
+                resultados.add(p);
+            }
         }
         
-        return resultado;
+        actualizarTablaConResultados(resultados);
+    }
+    
+    /**
+     * Filtra los pedidos por estado
+     * @param estado El estado por el que filtrar
+     */
+    public void filtrarPorEstado(String estado) {
+        if ("Todos".equals(estado)) {
+            actualizarTabla();
+            return;
+        }
+        
+        List<Pedido> resultados = new ArrayList<>();
+        
+        for (Pedido p : pedidos) {
+            if (p.getEstado().equals(estado)) {
+                resultados.add(p);
+            }
+        }
+        
+        actualizarTablaConResultados(resultados);
+    }
+    
+    /**
+     * Actualiza la tabla con la lista completa de pedidos
+     */
+    private void actualizarTabla() {
+        actualizarTablaConResultados(pedidos);
+    }
+    
+    /**
+     * Actualiza la tabla con una lista específica de pedidos
+     * @param listaPedidos Lista de pedidos a mostrar
+     */
+    private void actualizarTablaConResultados(List<Pedido> listaPedidos) {
+        Object[][] datos = new Object[listaPedidos.size()][5];
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        
+        for (int i = 0; i < listaPedidos.size(); i++) {
+            Pedido p = listaPedidos.get(i);
+            datos[i][0] = p.getId();
+            datos[i][1] = p.getCliente();
+            datos[i][2] = sdf.format(p.getFecha());
+            datos[i][3] = String.format("$%.2f", p.getTotal());
+            datos[i][4] = p.getEstado();
+        }
+        
+        vista.actualizarTablaPedidos(datos);
+    }
+    
+    /**
+     * Clase interna para representar un pedido
+     */
+    private class Pedido {
+        private int id;
+        private String cliente;
+        private Date fecha;
+        private double total;
+        private String estado;
+        
+        public Pedido(int id, String cliente, Date fecha, double total, String estado) {
+            this.id = id;
+            this.cliente = cliente;
+            this.fecha = fecha;
+            this.total = total;
+            this.estado = estado;
+        }
+        
+        public int getId() {
+            return id;
+        }
+        
+        public String getCliente() {
+            return cliente;
+        }
+        
+        public Date getFecha() {
+            return fecha;
+        }
+        
+        public double getTotal() {
+            return total;
+        }
+        
+        public String getEstado() {
+            return estado;
+        }
+        
+        public void setEstado(String estado) {
+            this.estado = estado;
+        }
     }
 }

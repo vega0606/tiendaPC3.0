@@ -54,6 +54,9 @@ public class VistaClientes extends JPanel {
     public VistaClientes() {
         setLayout(new BorderLayout());
         inicializarPanel();
+        
+        // Configurar listeners básicos aun sin controlador
+        configurarListenersBasicos();
     }
     
     /**
@@ -99,26 +102,41 @@ public class VistaClientes extends JPanel {
     }
     
     /**
+     * Configura los listeners básicos que no requieren controlador
+     */
+    private void configurarListenersBasicos() {
+        // Configurar listener para el botón de agregar que no necesita controlador
+        agregarButton.addActionListener(e -> mostrarFormularioNuevo());
+        
+        // Configurar listener para el botón de editar que no necesita controlador
+        editarButton.addActionListener(e -> {
+            Cliente cliente = obtenerClienteSeleccionado();
+            if (cliente != null) {
+                mostrarFormularioEditar(cliente);
+            } else {
+                mostrarMensaje("Seleccione un cliente para editar");
+            }
+        });
+        
+        // Configurar listener para el botón de cancelar
+        cancelarButton.addActionListener(e -> mostrarListado());
+    }
+    
+    /**
      * Configura los listeners para los componentes.
      */
     private void configurarListeners() {
+        // Primero configuramos los básicos
+        configurarListenersBasicos();
+        
         if (controller != null) {
-            // Botones del panel de listado
+            // Botones del panel de listado que necesitan controlador
             buscarButton.addActionListener(e -> controller.buscarClientes());
-            agregarButton.addActionListener(e -> mostrarFormularioNuevo());
-            editarButton.addActionListener(e -> {
-                Cliente cliente = obtenerClienteSeleccionado();
-                if (cliente != null) {
-                    mostrarFormularioEditar(cliente);
-                } else {
-                    mostrarMensaje("Seleccione un cliente para editar");
-                }
-            });
             eliminarButton.addActionListener(e -> controller.eliminarCliente());
             exportarPDFButton.addActionListener(e -> controller.exportarAPDF());
             exportarExcelButton.addActionListener(e -> controller.exportarAExcel());
             
-            // Botones del panel de formulario
+            // Botón de guardar del formulario
             guardarButton.addActionListener(e -> {
                 Cliente cliente = obtenerClienteDesdeFormulario();
                 boolean resultado = controller.guardarCliente(cliente, !editando);
@@ -126,7 +144,6 @@ public class VistaClientes extends JPanel {
                     mostrarListado();
                 }
             });
-            cancelarButton.addActionListener(e -> mostrarListado());
         }
     }
     
@@ -343,22 +360,48 @@ public class VistaClientes extends JPanel {
      * Muestra el panel de listado.
      */
     public void mostrarListado() {
-        cardLayout.show(mainPanel, "LISTADO");
+        System.out.println("Mostrando listado de clientes");
+        try {
+            cardLayout.show(mainPanel, "LISTADO");
+            System.out.println("Listado mostrado con éxito");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar listado: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
      * Muestra el panel de formulario para un nuevo cliente.
      */
     public void mostrarFormularioNuevo() {
-        limpiarFormulario();
-        editando = false;
-        clienteEnEdicion = null;
-        
-        // Actualizar título
-        JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
-        titleLabel.setText("Nuevo Cliente");
-        
-        cardLayout.show(mainPanel, "FORMULARIO");
+        System.out.println("Mostrando formulario para nuevo cliente");
+        try {
+            limpiarFormulario();
+            editando = false;
+            clienteEnEdicion = null;
+            
+            // Actualizar título
+            JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
+            titleLabel.setText("Nuevo Cliente");
+            
+            cardLayout.show(mainPanel, "FORMULARIO");
+            System.out.println("Formulario mostrado con éxito");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar formulario: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Método alternativo si CardLayout falla
+            try {
+                this.remove(mainPanel);
+                this.add(formularioPanel, BorderLayout.CENTER);
+                this.revalidate();
+                this.repaint();
+                System.out.println("Formulario mostrado con método alternativo");
+            } catch (Exception ex) {
+                System.err.println("Error en método alternativo: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
     }
     
     /**
@@ -367,22 +410,41 @@ public class VistaClientes extends JPanel {
      * @param cliente El cliente a editar
      */
     public void mostrarFormularioEditar(Cliente cliente) {
-        limpiarFormulario();
-        editando = true;
-        clienteEnEdicion = cliente;
-        
-        // Cargar datos del cliente en el formulario
-        nombreField.setText(cliente.getNombre());
-        rucField.setText(cliente.getRuc());
-        telefonoField.setText(cliente.getTelefono());
-        emailField.setText(cliente.getEmail());
-        direccionField.setText(cliente.getDireccion());
-        
-        // Actualizar título
-        JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
-        titleLabel.setText("Editar Cliente");
-        
-        cardLayout.show(mainPanel, "FORMULARIO");
+        System.out.println("Mostrando formulario para editar cliente");
+        try {
+            limpiarFormulario();
+            editando = true;
+            clienteEnEdicion = cliente;
+            
+            // Cargar datos del cliente en el formulario
+            nombreField.setText(cliente.getNombre());
+            rucField.setText(cliente.getRuc());
+            telefonoField.setText(cliente.getTelefono());
+            emailField.setText(cliente.getEmail());
+            direccionField.setText(cliente.getDireccion());
+            
+            // Actualizar título
+            JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
+            titleLabel.setText("Editar Cliente");
+            
+            cardLayout.show(mainPanel, "FORMULARIO");
+            System.out.println("Formulario de edición mostrado con éxito");
+        } catch (Exception e) {
+            System.err.println("Error al mostrar formulario de edición: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Método alternativo si CardLayout falla
+            try {
+                this.remove(mainPanel);
+                this.add(formularioPanel, BorderLayout.CENTER);
+                this.revalidate();
+                this.repaint();
+                System.out.println("Formulario de edición mostrado con método alternativo");
+            } catch (Exception ex) {
+                System.err.println("Error en método alternativo: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
     }
     
     /**
@@ -451,12 +513,17 @@ public class VistaClientes extends JPanel {
         }
         
         Cliente cliente = new Cliente();
-        cliente.setId((String) clientesTable.getValueAt(selectedRow, 0));
-        cliente.setNombre((String) clientesTable.getValueAt(selectedRow, 1));
-        cliente.setRuc((String) clientesTable.getValueAt(selectedRow, 2));
-        cliente.setTelefono((String) clientesTable.getValueAt(selectedRow, 3));
-        cliente.setEmail((String) clientesTable.getValueAt(selectedRow, 4));
-        cliente.setDireccion((String) clientesTable.getValueAt(selectedRow, 5));
+        try {
+            cliente.setId((String) clientesTable.getValueAt(selectedRow, 0));
+            cliente.setNombre((String) clientesTable.getValueAt(selectedRow, 1));
+            cliente.setRuc((String) clientesTable.getValueAt(selectedRow, 2));
+            cliente.setTelefono((String) clientesTable.getValueAt(selectedRow, 3));
+            cliente.setEmail((String) clientesTable.getValueAt(selectedRow, 4));
+            cliente.setDireccion((String) clientesTable.getValueAt(selectedRow, 5));
+        } catch (Exception e) {
+            System.err.println("Error al obtener cliente seleccionado: " + e.getMessage());
+            return null;
+        }
         
         return cliente;
     }

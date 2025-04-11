@@ -1,280 +1,255 @@
 package controlador;
 
-import java.util.Date;
-import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-import modelo.Transaccion;
 import ventana.VistaTransacciones;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Date;
+import java.awt.Frame;
+import java.text.SimpleDateFormat;
+import java.util.Random;
+
 /**
- * Controlador para la vista de transacciones.
- * Gestiona la interacción entre la vista de transacciones y el modelo de datos.
+ * Controlador para la vista de transacciones
  */
 public class VistaTransaccionesController {
     
     private VistaTransacciones vista;
-    private TransaccionController transaccionController;
+    private List<Transaccion> transacciones;
     
     /**
-     * Constructor del controlador de vista de transacciones.
-     * 
-     * @param vista La vista de transacciones
-     * @param transaccionController El controlador de transacciones
+     * Constructor del controlador
+     * @param vista La vista de transacciones asociada
      */
-    public VistaTransaccionesController(VistaTransacciones vista, TransaccionController transaccionController) {
+    public VistaTransaccionesController(VistaTransacciones vista) {
         this.vista = vista;
-        this.transaccionController = transaccionController;
-        
-        // Inicializar los listeners y componentes de la vista
-        inicializarVista();
+        this.transacciones = new ArrayList<>();
+        cargarDatosDePrueba();
+        actualizarTabla();
     }
     
     /**
-     * Inicializa los componentes de la vista y configura los listeners.
+     * Carga datos de prueba para la tabla de transacciones
      */
-    private void inicializarVista() {
-        // Cargar las transacciones al iniciar la vista
-        cargarTransacciones();
+    private void cargarDatosDePrueba() {
+        // Esto simularía la carga desde una base de datos
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Random random = new Random();
         
-        // Configurar listeners para los botones de la vista
-        configurarListeners();
-    }
-    
-    /**
-     * Configura los listeners para los botones y componentes interactivos de la vista.
-     */
-    private void configurarListeners() {
-        // Listener para el botón de buscar transacción
-        vista.getBtnBuscar().addActionListener(e -> buscarTransaccionPorId());
-        
-        // Listener para el botón de mostrar todas las transacciones
-        vista.getBtnMostrarTodas().addActionListener(e -> cargarTransacciones());
-        
-        // Listener para el botón de nueva transacción
-        vista.getBtnNuevaTransaccion().addActionListener(e -> abrirFormularioNuevaTransaccion());
-        
-        // Listener para el botón de editar transacción
-        vista.getBtnEditar().addActionListener(e -> editarTransaccionSeleccionada());
-        
-        // Listener para el botón de eliminar transacción
-        vista.getBtnEliminar().addActionListener(e -> eliminarTransaccionSeleccionada());
-        
-        // Listener para filtro por tipo de transacción
-        vista.getBtnFiltrarPorTipo().addActionListener(e -> filtrarTransaccionesPorTipo());
-        
-        // Listener para filtro por fecha
-        vista.getBtnFiltrarPorFecha().addActionListener(e -> filtrarTransaccionesPorFecha());
-        
-        // Listener para filtro por monto
-        vista.getBtnFiltrarPorMonto().addActionListener(e -> filtrarTransaccionesPorMonto());
-        
-        // Listener para exportar a PDF
-        vista.getBtnExportarPDF().addActionListener(e -> exportarAFormato("PDF"));
-        
-        // Listener para exportar a Excel
-        vista.getBtnExportarExcel().addActionListener(e -> exportarAFormato("Excel"));
-    }
-    
-    /**
-     * Carga todas las transacciones en la tabla de la vista.
-     */
-    public void cargarTransacciones() {
-        List<Transaccion> transacciones = transaccionController.obtenerTodasTransacciones();
-        vista.mostrarTransacciones(transacciones);
-    }
-    
-    /**
-     * Busca una transacción por su ID y la muestra en la vista.
-     */
-    private void buscarTransaccionPorId() {
         try {
-            String idTexto = vista.getTxtBusqueda().getText();
-            if (idTexto.isEmpty()) {
-                vista.mostrarMensaje("Ingrese un ID para buscar");
-                return;
-            }
-            
-            int id = Integer.parseInt(idTexto);
-            Transaccion transaccion = transaccionController.buscarTransaccionPorId(id);
-            
-            if (transaccion != null) {
-                vista.mostrarTransaccion(transaccion);
-            } else {
-                vista.mostrarMensaje("No se encontró ninguna transacción con el ID: " + id);
-            }
-        } catch (NumberFormatException e) {
-            vista.mostrarMensaje("El ID debe ser un número entero");
+            transacciones.add(new Transaccion(1, "Venta", 1500.0, sdf.parse("2025-04-10"), "Venta de componentes"));
+            transacciones.add(new Transaccion(2, "Compra", 3200.0, sdf.parse("2025-04-09"), "Compra de inventario"));
+            transacciones.add(new Transaccion(3, "Venta", 850.75, sdf.parse("2025-04-08"), "Venta de periféricos"));
+            transacciones.add(new Transaccion(4, "Devolución", 450.0, sdf.parse("2025-04-07"), "Devolución por fallo"));
+            transacciones.add(new Transaccion(5, "Venta", 2100.0, sdf.parse("2025-04-06"), "Venta de equipo completo"));
+        } catch (Exception e) {
+            System.err.println("Error al cargar datos de prueba: " + e.getMessage());
         }
     }
     
     /**
-     * Abre el formulario para crear una nueva transacción.
+     * Crea una nueva transacción
      */
-    private void abrirFormularioNuevaTransaccion() {
-        vista.mostrarFormularioTransaccion(null);
-    }
-    
-    /**
-     * Edita la transacción seleccionada en la tabla.
-     */
-    private void editarTransaccionSeleccionada() {
-        Transaccion transaccionSeleccionada = vista.obtenerTransaccionSeleccionada();
+    public void nuevaTransaccion() {
+        // Aquí se mostraría un diálogo para ingresar los datos de la transacción
+        JDialog dialogo = new JDialog((Frame) SwingUtilities.getWindowAncestor(vista.getPanel()), "Nueva Transacción", true);
+        dialogo.setSize(400, 300);
+        dialogo.setLocationRelativeTo(vista.getPanel());
+        dialogo.setLayout(new java.awt.BorderLayout());
         
-        if (transaccionSeleccionada != null) {
-            vista.mostrarFormularioTransaccion(transaccionSeleccionada);
-        } else {
-            vista.mostrarMensaje("Seleccione una transacción para editar");
-        }
-    }
-    
-    /**
-     * Elimina la transacción seleccionada en la tabla.
-     */
-    private void eliminarTransaccionSeleccionada() {
-        Transaccion transaccionSeleccionada = vista.obtenerTransaccionSeleccionada();
+        JPanel panel = new JPanel(new java.awt.GridLayout(5, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        if (transaccionSeleccionada != null) {
-            boolean confirmacion = vista.mostrarConfirmacion("¿Está seguro de eliminar esta transacción?");
-            
-            if (confirmacion) {
-                boolean eliminado = transaccionController.eliminarTransaccion(transaccionSeleccionada.getId());
+        panel.add(new JLabel("Tipo:"));
+        JComboBox<String> comboTipo = new JComboBox<>(new String[]{"Venta", "Compra", "Devolución", "Ajuste"});
+        panel.add(comboTipo);
+        
+        panel.add(new JLabel("Monto:"));
+        JTextField txtMonto = new JTextField();
+        panel.add(txtMonto);
+        
+        panel.add(new JLabel("Fecha:"));
+        JTextField txtFecha = new JTextField(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        txtFecha.setEditable(false);
+        panel.add(txtFecha);
+        
+        panel.add(new JLabel("Descripción:"));
+        JTextField txtDescripcion = new JTextField();
+        panel.add(txtDescripcion);
+        
+        dialogo.add(panel, java.awt.BorderLayout.CENTER);
+        
+        JPanel panelBotones = new JPanel();
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnCancelar = new JButton("Cancelar");
+        
+        btnGuardar.addActionListener(e -> {
+            try {
+                String tipo = (String) comboTipo.getSelectedItem();
+                double monto = Double.parseDouble(txtMonto.getText());
+                Date fecha = new SimpleDateFormat("yyyy-MM-dd").parse(txtFecha.getText());
+                String descripcion = txtDescripcion.getText();
                 
-                if (eliminado) {
-                    vista.mostrarMensaje("Transacción eliminada correctamente");
-                    cargarTransacciones();
-                } else {
-                    vista.mostrarMensaje("No se pudo eliminar la transacción");
-                }
+                // Generar un ID único (en una aplicación real esto vendría de la base de datos)
+                int nuevoId = transacciones.size() > 0 ? 
+                    transacciones.get(transacciones.size() - 1).getId() + 1 : 1;
+                
+                // Crear y agregar la nueva transacción
+                Transaccion nuevaTransaccion = new Transaccion(nuevoId, tipo, monto, fecha, descripcion);
+                transacciones.add(nuevaTransaccion);
+                
+                // Actualizar la tabla
+                actualizarTabla();
+                
+                JOptionPane.showMessageDialog(dialogo, 
+                    "Transacción registrada correctamente", 
+                    "Éxito", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                dialogo.dispose();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialogo, 
+                    "El monto debe ser un número válido", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialogo, 
+                    "Error al guardar la transacción: " + ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+        
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCancelar);
+        
+        dialogo.add(panelBotones, java.awt.BorderLayout.SOUTH);
+        dialogo.setVisible(true);
+    }
+    
+    /**
+     * Elimina una transacción seleccionada
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     */
+    public void eliminarTransaccion(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < transacciones.size()) {
+            int confirmar = JOptionPane.showConfirmDialog(vista.getPanel(),
+                "¿Está seguro de eliminar esta transacción?",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION);
+            
+            if (confirmar == JOptionPane.YES_OPTION) {
+                transacciones.remove(filaSeleccionada);
+                actualizarTabla();
+                JOptionPane.showMessageDialog(vista.getPanel(),
+                    "Transacción eliminada correctamente",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
-            vista.mostrarMensaje("Seleccione una transacción para eliminar");
+            vista.mostrarMensaje(
+                "Debe seleccionar una transacción",
+                JOptionPane.ERROR_MESSAGE
+            );
         }
     }
     
     /**
-     * Filtra las transacciones por tipo.
+     * Busca transacciones según un criterio
+     * @param criterioBusqueda El texto a buscar
      */
-    private void filtrarTransaccionesPorTipo() {
-        String tipo = vista.getComboTipoTransaccion().getSelectedItem().toString();
-        
-        if (tipo.equals("Todas")) {
-            cargarTransacciones();
+    public void buscarTransacciones(String criterioBusqueda) {
+        if (criterioBusqueda == null || criterioBusqueda.trim().isEmpty()) {
+            actualizarTabla();
             return;
         }
         
-        List<Transaccion> transaccionesFiltradas = transaccionController.filtrarTransaccionesPorTipo(tipo);
-        vista.mostrarTransacciones(transaccionesFiltradas);
+        criterioBusqueda = criterioBusqueda.toLowerCase();
+        List<Transaccion> resultados = new ArrayList<>();
+        
+        for (Transaccion t : transacciones) {
+            if (String.valueOf(t.getId()).contains(criterioBusqueda) ||
+                t.getTipo().toLowerCase().contains(criterioBusqueda) ||
+                t.getDescripcion().toLowerCase().contains(criterioBusqueda) ||
+                String.valueOf(t.getMonto()).contains(criterioBusqueda)) {
+                
+                resultados.add(t);
+            }
+        }
+        
+        actualizarTablaConResultados(resultados);
     }
     
     /**
-     * Filtra las transacciones por un rango de fechas.
+     * Actualiza la tabla con la lista completa de transacciones
      */
-    private void filtrarTransaccionesPorFecha() {
-        try {
-            Date fechaInicio = vista.getFechaInicio().getDate();
-            Date fechaFin = vista.getFechaFin().getDate();
-            
-            if (fechaInicio == null || fechaFin == null) {
-                vista.mostrarMensaje("Seleccione un rango de fechas válido");
-                return;
-            }
-            
-            if (fechaInicio.after(fechaFin)) {
-                vista.mostrarMensaje("La fecha de inicio debe ser anterior a la fecha de fin");
-                return;
-            }
-            
-            List<Transaccion> transaccionesFiltradas = transaccionController.filtrarTransaccionesPorFecha(fechaInicio, fechaFin);
-            vista.mostrarTransacciones(transaccionesFiltradas);
-            
-        } catch (Exception e) {
-            vista.mostrarMensaje("Error al filtrar por fecha: " + e.getMessage());
-        }
+    private void actualizarTabla() {
+        actualizarTablaConResultados(transacciones);
     }
     
     /**
-     * Filtra las transacciones por un rango de montos.
+     * Actualiza la tabla con una lista específica de transacciones
+     * @param listaTransacciones Lista de transacciones a mostrar
      */
-    private void filtrarTransaccionesPorMonto() {
-        try {
-            String montoMinimoTexto = vista.getTxtMontoMinimo().getText();
-            String montoMaximoTexto = vista.getTxtMontoMaximo().getText();
-            
-            if (montoMinimoTexto.isEmpty() || montoMaximoTexto.isEmpty()) {
-                vista.mostrarMensaje("Ingrese un rango de montos válido");
-                return;
-            }
-            
-            double montoMinimo = Double.parseDouble(montoMinimoTexto);
-            double montoMaximo = Double.parseDouble(montoMaximoTexto);
-            
-            if (montoMinimo > montoMaximo) {
-                vista.mostrarMensaje("El monto mínimo debe ser menor que el monto máximo");
-                return;
-            }
-            
-            List<Transaccion> transaccionesFiltradas = transaccionController.filtrarTransaccionesPorMonto(montoMinimo, montoMaximo);
-            vista.mostrarTransacciones(transaccionesFiltradas);
-            
-        } catch (NumberFormatException e) {
-            vista.mostrarMensaje("Los montos deben ser valores numéricos");
-        } catch (Exception e) {
-            vista.mostrarMensaje("Error al filtrar por monto: " + e.getMessage());
+    private void actualizarTablaConResultados(List<Transaccion> listaTransacciones) {
+        String[] columnas = {"ID", "Tipo", "Monto", "Fecha", "Descripción"};
+        Object[][] datos = new Object[listaTransacciones.size()][columnas.length];
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        
+        for (int i = 0; i < listaTransacciones.size(); i++) {
+            Transaccion t = listaTransacciones.get(i);
+            datos[i][0] = t.getId();
+            datos[i][1] = t.getTipo();
+            datos[i][2] = String.format("$%.2f", t.getMonto());
+            datos[i][3] = sdf.format(t.getFecha());
+            datos[i][4] = t.getDescripcion();
         }
+        
+        vista.actualizarTabla(datos, columnas);
     }
     
     /**
-     * Exporta las transacciones mostradas a un formato específico.
-     * 
-     * @param formato El formato de exportación ("PDF" o "Excel")
+     * Clase interna para representar una transacción
      */
-    private void exportarAFormato(String formato) {
-        List<Transaccion> transacciones = vista.obtenerTransaccionesMostradas();
+    private class Transaccion {
+        private int id;
+        private String tipo;
+        private double monto;
+        private Date fecha;
+        private String descripcion;
         
-        if (transacciones.isEmpty()) {
-            vista.mostrarMensaje("No hay datos para exportar");
-            return;
+        public Transaccion(int id, String tipo, double monto, Date fecha, String descripcion) {
+            this.id = id;
+            this.tipo = tipo;
+            this.monto = monto;
+            this.fecha = fecha;
+            this.descripcion = descripcion;
         }
         
-        String rutaArchivo = vista.seleccionarRutaGuardado(formato);
-        
-        if (rutaArchivo != null) {
-            boolean exportado = false;
-            
-            if ("PDF".equals(formato)) {
-                exportado = transaccionController.exportarAPDF(transacciones, rutaArchivo);
-            } else if ("Excel".equals(formato)) {
-                exportado = transaccionController.exportarAExcel(transacciones, rutaArchivo);
-            }
-            
-            if (exportado) {
-                vista.mostrarMensaje("Datos exportados correctamente a " + formato);
-            } else {
-                vista.mostrarMensaje("Error al exportar a " + formato);
-            }
-        }
-    }
-    
-    /**
-     * Guarda una transacción nueva o actualizada.
-     * 
-     * @param transaccion La transacción a guardar
-     * @param esNueva Indica si es una nueva transacción o una actualización
-     * @return true si se guardó correctamente, false en caso contrario
-     */
-    public boolean guardarTransaccion(Transaccion transaccion, boolean esNueva) {
-        boolean resultado;
-        
-        if (esNueva) {
-            resultado = transaccionController.crearTransaccion(transaccion);
-        } else {
-            resultado = transaccionController.actualizarTransaccion(transaccion);
+        public int getId() {
+            return id;
         }
         
-        if (resultado) {
-            cargarTransacciones();
+        public String getTipo() {
+            return tipo;
         }
         
-        return resultado;
+        public double getMonto() {
+            return monto;
+        }
+        
+        public Date getFecha() {
+            return fecha;
+        }
+        
+        public String getDescripcion() {
+            return descripcion;
+        }
     }
 }
