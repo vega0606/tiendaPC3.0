@@ -71,13 +71,7 @@ public class VistaReportesController {
         });
         
         // Configurar eventos para los botones de exportación
-        vista.getBtnExportarPDF().addActionListener(e -> {
-            vista.mostrarMensaje("La exportación a PDF está en desarrollo.");
-        });
-        
-        vista.getBtnExportarExcel().addActionListener(e -> {
-            vista.mostrarMensaje("La exportación a Excel está en desarrollo.");
-        });
+       
     }
     
     /**
@@ -191,8 +185,7 @@ public class VistaReportesController {
         actualizarResumen(String.format("Total Ventas: $%.2f", totalVentas));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+        
     }
     
     /**
@@ -249,8 +242,7 @@ public class VistaReportesController {
         actualizarResumen(String.format("Total Vendido: $%.2f", totalGeneral));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+        
     }
     
     /**
@@ -307,8 +299,7 @@ public class VistaReportesController {
         actualizarResumen(String.format("Total Gastado: $%.2f", totalGeneral));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+        
     }
     
     /**
@@ -374,8 +365,7 @@ public class VistaReportesController {
         actualizarResumen(String.format("Valor Total Inventario: $%.2f", valorTotal));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+        
     }
     
     /**
@@ -453,8 +443,7 @@ public class VistaReportesController {
         actualizarResumen(String.format("Ganancia Total: $%.2f", gananciaTotal));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+       
     }
     
     /**
@@ -518,8 +507,7 @@ public class VistaReportesController {
                 limiteStock, productosBajoStock.size()));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+        
     }
     
     /**
@@ -610,8 +598,7 @@ public class VistaReportesController {
                 totalDevoluciones, valorTotal));
         
         // Habilitar botones de exportación
-        vista.getBtnExportarPDF().setEnabled(true);
-        vista.getBtnExportarExcel().setEnabled(true);
+       
     }
     
     /**

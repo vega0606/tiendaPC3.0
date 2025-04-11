@@ -1,46 +1,27 @@
 package controlador;
 
+import modelo.Cliente;
+import DAO.ClienteDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import modelo.Cliente;
 
 /**
  * Controlador para la lógica de negocio de clientes.
+ * Esta implementación usa ClienteDAO para interactuar con la base de datos.
  */
 public class ClienteController {
-    
-    // Base de datos en memoria para pruebas
-    private static List<Cliente> clientesDB = new ArrayList<>();
-    private static int nextId = 1;
+    private static final Logger logger = LoggerFactory.getLogger(ClienteController.class);
+    private ClienteDAO clienteDAO;
     
     /**
      * Constructor del controlador.
      */
     public ClienteController() {
-        // Si la base de datos está vacía, inicializar con algunos datos
-        if (clientesDB.isEmpty()) {
-            // Crear algunos clientes de ejemplo
-            Cliente cliente1 = new Cliente();
-            cliente1.setId("1");
-            cliente1.setNombre("Juan Pérez");
-            cliente1.setRuc("10101010101");
-            cliente1.setTelefono("555-1234");
-            cliente1.setEmail("juan@ejemplo.com");
-            cliente1.setDireccion("Av. Principal 123");
-            clientesDB.add(cliente1);
-            
-            Cliente cliente2 = new Cliente();
-            cliente2.setId("2");
-            cliente2.setNombre("María García");
-            cliente2.setRuc("20202020202");
-            cliente2.setTelefono("555-5678");
-            cliente2.setEmail("maria@ejemplo.com");
-            cliente2.setDireccion("Calle Secundaria 456");
-            clientesDB.add(cliente2);
-            
-            nextId = 3;
-        }
+        this.clienteDAO = new ClienteDAO();
     }
     
     /**
@@ -49,7 +30,12 @@ public class ClienteController {
      * @return Lista de todos los clientes
      */
     public List<Cliente> obtenerTodosLosClientes() {
-        return new ArrayList<>(clientesDB);
+        try {
+            return clienteDAO.listarTodos();
+        } catch (Exception e) {
+            logger.error("Error al obtener todos los clientes: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -59,9 +45,12 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorNombre(String nombre) {
-        return clientesDB.stream()
-            .filter(c -> c.getNombre().toLowerCase().contains(nombre.toLowerCase()))
-            .collect(Collectors.toList());
+        try {
+            return clienteDAO.buscarPorNombre(nombre);
+        } catch (Exception e) {
+            logger.error("Error al buscar clientes por nombre: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -71,9 +60,17 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorRuc(String ruc) {
-        return clientesDB.stream()
-            .filter(c -> c.getRuc().contains(ruc))
-            .collect(Collectors.toList());
+        try {
+            Cliente cliente = clienteDAO.buscarPorRuc(ruc);
+            List<Cliente> resultado = new ArrayList<>();
+            if (cliente != null) {
+                resultado.add(cliente);
+            }
+            return resultado;
+        } catch (Exception e) {
+            logger.error("Error al buscar clientes por RUC: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -83,9 +80,22 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorEmail(String email) {
-        return clientesDB.stream()
-            .filter(c -> c.getEmail().toLowerCase().contains(email.toLowerCase()))
-            .collect(Collectors.toList());
+        try {
+            // Como no hay un método específico en el DAO, podemos filtrar los resultados de listarTodos
+            List<Cliente> clientes = clienteDAO.listarTodos();
+            List<Cliente> resultados = new ArrayList<>();
+            
+            for (Cliente cliente : clientes) {
+                if (cliente.getEmail() != null && cliente.getEmail().toLowerCase().contains(email.toLowerCase())) {
+                    resultados.add(cliente);
+                }
+            }
+            
+            return resultados;
+        } catch (Exception e) {
+            logger.error("Error al buscar clientes por email: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -95,17 +105,28 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientes(String criterio) {
-        String criterioBusqueda = criterio.toLowerCase();
-        
-        return clientesDB.stream()
-            .filter(c -> 
-                c.getNombre().toLowerCase().contains(criterioBusqueda) ||
-                c.getRuc().toLowerCase().contains(criterioBusqueda) ||
-                c.getEmail().toLowerCase().contains(criterioBusqueda) ||
-                c.getTelefono().toLowerCase().contains(criterioBusqueda) ||
-                c.getDireccion().toLowerCase().contains(criterioBusqueda)
-            )
-            .collect(Collectors.toList());
+        try {
+            // Como no hay un método específico en el DAO, podemos filtrar los resultados de listarTodos
+            List<Cliente> clientes = clienteDAO.listarTodos();
+            List<Cliente> resultados = new ArrayList<>();
+            
+            String criterioBusqueda = criterio.toLowerCase();
+            
+            for (Cliente cliente : clientes) {
+                if ((cliente.getNombre() != null && cliente.getNombre().toLowerCase().contains(criterioBusqueda)) ||
+                    (cliente.getRuc() != null && cliente.getRuc().toLowerCase().contains(criterioBusqueda)) ||
+                    (cliente.getEmail() != null && cliente.getEmail().toLowerCase().contains(criterioBusqueda)) ||
+                    (cliente.getTelefono() != null && cliente.getTelefono().toLowerCase().contains(criterioBusqueda)) ||
+                    (cliente.getDireccion() != null && cliente.getDireccion().toLowerCase().contains(criterioBusqueda))) {
+                    resultados.add(cliente);
+                }
+            }
+            
+            return resultados;
+        } catch (Exception e) {
+            logger.error("Error al buscar clientes por criterio general: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -116,25 +137,37 @@ public class ClienteController {
      */
     public boolean agregarCliente(Cliente cliente) {
         try {
-            // Asignar ID si es nuevo
-            if (cliente.getId() == null || cliente.getId().isEmpty()) {
-                cliente.setId(String.valueOf(nextId++));
-            }
+            logger.info("Intentando guardar cliente: {}", cliente.getNombre());
             
             // Verificar que no exista un cliente con el mismo RUC
-            boolean existeRuc = clientesDB.stream()
-                .anyMatch(c -> c.getRuc().equals(cliente.getRuc()) && !c.getId().equals(cliente.getId()));
-            
-            if (existeRuc) {
-                System.err.println("Ya existe un cliente con el mismo RUC/NIT");
+            Cliente existente = clienteDAO.buscarPorRuc(cliente.getRuc());
+            if (existente != null && !existente.getId().equals(cliente.getId())) {
+                logger.warn("Ya existe un cliente con el RUC/NIT: {}", cliente.getRuc());
                 return false;
             }
             
-            // Agregar a la lista
-            clientesDB.add(cliente);
+            // Asignar ID si es nuevo
+            if (cliente.getId() == null || cliente.getId().isEmpty()) {
+                cliente.setId(clienteDAO.generarNuevoId());
+            }
+            
+            // Establecer fecha de registro si es null
+            if (cliente.getFechaRegistro() == null) {
+                cliente.setFechaRegistro(LocalDate.now());
+            }
+            
+            // Establecer estado si es null
+            if (cliente.getEstado() == null || cliente.getEstado().isEmpty()) {
+                cliente.setEstado("Activo");
+            }
+            
+            // Insertar el nuevo cliente
+            clienteDAO.crear(cliente);
+            logger.info("Cliente guardado. ID: {}", cliente.getId());
+            
             return true;
         } catch (Exception e) {
-            System.err.println("Error al agregar cliente: " + e.getMessage());
+            logger.error("Error al agregar cliente: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -147,34 +180,34 @@ public class ClienteController {
      */
     public boolean actualizarCliente(Cliente cliente) {
         try {
-            // Buscar cliente por ID
-            int index = -1;
-            for (int i = 0; i < clientesDB.size(); i++) {
-                if (clientesDB.get(i).getId().equals(cliente.getId())) {
-                    index = i;
-                    break;
-                }
-            }
+            logger.info("Intentando actualizar cliente ID: {}", cliente.getId());
             
-            if (index == -1) {
-                System.err.println("Cliente no encontrado para actualizar");
+            // Verificar que el cliente exista
+            Cliente existente = clienteDAO.buscarPorId(cliente.getId());
+            if (existente == null) {
+                logger.warn("Cliente no encontrado para actualizar ID: {}", cliente.getId());
                 return false;
             }
             
-            // Verificar RUC único
-            boolean existeRuc = clientesDB.stream()
-                .anyMatch(c -> c.getRuc().equals(cliente.getRuc()) && !c.getId().equals(cliente.getId()));
-            
-            if (existeRuc) {
-                System.err.println("Ya existe otro cliente con el mismo RUC/NIT");
+            // Verificar que no exista otro cliente con el mismo RUC
+            Cliente clienteConMismoRuc = clienteDAO.buscarPorRuc(cliente.getRuc());
+            if (clienteConMismoRuc != null && !clienteConMismoRuc.getId().equals(cliente.getId())) {
+                logger.warn("Ya existe otro cliente con el RUC/NIT: {}", cliente.getRuc());
                 return false;
             }
             
-            // Actualizar
-            clientesDB.set(index, cliente);
+            // Mantener valores que no deben cambiar
+            if (cliente.getFechaRegistro() == null) {
+                cliente.setFechaRegistro(existente.getFechaRegistro());
+            }
+            
+            // Actualizar el cliente
+            clienteDAO.actualizar(cliente);
+            logger.info("Cliente actualizado. ID: {}", cliente.getId());
+            
             return true;
         } catch (Exception e) {
-            System.err.println("Error al actualizar cliente: " + e.getMessage());
+            logger.error("Error al actualizar cliente: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -187,66 +220,79 @@ public class ClienteController {
      */
     public boolean eliminarCliente(String id) {
         try {
-            return clientesDB.removeIf(c -> c.getId().equals(id));
+            return clienteDAO.eliminar(id);
         } catch (Exception e) {
-            System.err.println("Error al eliminar cliente: " + e.getMessage());
+            logger.error("Error al eliminar cliente: {}", e.getMessage(), e);
             return false;
         }
     }
     
     /**
-     * Exporta la lista de clientes a un archivo PDF.
+     * Busca un cliente exactamente por su RUC.
      * 
-     * @param clientes Lista de clientes a exportar
-     * @param rutaArchivo Ruta donde guardar el archivo
-     * @return true si se exportó correctamente, false en caso contrario
+     * @param ruc RUC del cliente
+     * @return Cliente encontrado o null si no existe
+     */
+    public Cliente buscarClientePorRuc(String ruc) {
+        try {
+            return clienteDAO.buscarPorRuc(ruc);
+        } catch (Exception e) {
+            logger.error("Error al buscar cliente por RUC: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Crea un nuevo cliente con los datos especificados.
+     */
+    public Cliente crearCliente(String nombre, String telefono, String email, String direccion, String ruc) {
+        try {
+            // Verificar si ya existe un cliente con ese RUC
+            Cliente existente = clienteDAO.buscarPorRuc(ruc);
+            if (existente != null) {
+                logger.warn("Ya existe un cliente con el RUC/NIT: {}", ruc);
+                return null;
+            }
+            
+            // Crear nuevo cliente
+            Cliente cliente = new Cliente();
+            cliente.setId(clienteDAO.generarNuevoId());
+            cliente.setNombre(nombre);
+            cliente.setTelefono(telefono);
+            cliente.setEmail(email);
+            cliente.setDireccion(direccion);
+            cliente.setRuc(ruc);
+            cliente.setEstado("Activo");
+            cliente.setFechaRegistro(LocalDate.now());
+            cliente.setSaldoPendiente(0.0);
+            
+            // Guardar en la base de datos
+            clienteDAO.crear(cliente);
+            
+            logger.info("Cliente creado. ID: {}, Nombre: {}", cliente.getId(), cliente.getNombre());
+            return cliente;
+        } catch (Exception e) {
+            logger.error("Error al crear cliente: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+    
+    /**
+     * Exporta la lista de clientes a un archivo PDF.
      */
     public boolean exportarAPDF(List<Cliente> clientes, String rutaArchivo) {
-        // En una implementación real, aquí iría el código para generar el PDF
-        System.out.println("Exportando a PDF: " + rutaArchivo);
+        // Implementación pendiente
+        logger.info("Exportando a PDF: {}", rutaArchivo);
         return true;
     }
     
     /**
      * Exporta la lista de clientes a un archivo Excel.
-     * 
-     * @param clientes Lista de clientes a exportar
-     * @param rutaArchivo Ruta donde guardar el archivo
-     * @return true si se exportó correctamente, false en caso contrario
      */
     public boolean exportarAExcel(List<Cliente> clientes, String rutaArchivo) {
-        // En una implementación real, aquí iría el código para generar el Excel
-        System.out.println("Exportando a Excel: " + rutaArchivo);
+        // Implementación pendiente
+        logger.info("Exportando a Excel: {}", rutaArchivo);
         return true;
     }
-    
-    public Cliente crearCliente(String nombre, String telefono, String email, String direccion, String ruc) {
-        // Verificamos si ya existe un cliente con ese RUC
-        boolean existeRuc = clientesDB.stream()
-            .anyMatch(c -> c.getRuc().equals(ruc));
-
-        if (existeRuc) {
-            System.err.println("Ya existe un cliente con ese RUC.");
-            return null;
-        }
-
-        Cliente cliente = new Cliente();
-        cliente.setId(String.valueOf(nextId++));
-        cliente.setNombre(nombre);
-        cliente.setTelefono(telefono);
-        cliente.setEmail(email);
-        cliente.setDireccion(direccion);
-        cliente.setRuc(ruc);
-
-        clientesDB.add(cliente);
-        return cliente;
-    }
-    
-    public Cliente buscarClientePorRuc(String ruc) {
-        return clientesDB.stream()
-            .filter(c -> c.getRuc().equals(ruc))
-            .findFirst()
-            .orElse(null);
-    }
-    
 }
+    
