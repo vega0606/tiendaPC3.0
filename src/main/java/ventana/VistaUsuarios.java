@@ -461,8 +461,18 @@ public class VistaUsuarios extends Vista {
      * Muestra el panel de listado.
      */
     public void mostrarListado() {
-        CardLayout cl = (CardLayout) panel.getParent().getLayout();
-        cl.show(panel.getParent(), "LISTADO");
+        if (panel.getParent() != null) {
+            CardLayout cl = (CardLayout) panel.getParent().getLayout();
+            cl.show(panel.getParent(), "LISTADO");
+        } else {
+            // Posponer esta operación o solo cambiar el contenido del panel principal
+            // Si estamos en el constructor, simplemente no hacemos nada aquí
+            JPanel mainContentPanel = (JPanel) panel.getComponent(2); // Asumiendo que mainContentPanel es el tercer componente
+            if (mainContentPanel != null) {
+                CardLayout cl = (CardLayout) mainContentPanel.getLayout();
+                cl.show(mainContentPanel, "LISTADO");
+            }
+        }
     }
     
     /**

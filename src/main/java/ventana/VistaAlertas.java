@@ -41,14 +41,14 @@ public class VistaAlertas extends Vista {
     private JComboBox<String> priorityCombo;
     private JButton refreshButton;
     private JTable alertsTable;
-    private Map<String, JPanel> summaryCards;
+    private static final Map<String, JPanel> summaryCards = new HashMap<>();
     
     // Controlador
     private VistaAlertasController controller;
     
     public VistaAlertas() {
         super("Sistema de Alertas");
-        summaryCards = new HashMap<>();
+        
     }
     
     @Override

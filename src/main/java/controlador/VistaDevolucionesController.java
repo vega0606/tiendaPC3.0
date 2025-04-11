@@ -1,222 +1,306 @@
 package controlador;
 
-import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-import modelo.Devolucion;
 import ventana.VistaDevoluciones;
 
+import java.awt.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+
 /**
- * Controlador para la vista de devoluciones.
- * Gestiona la interacción entre la vista de devoluciones y el modelo de datos.
+ * Controlador para la vista de devoluciones
  */
 public class VistaDevolucionesController {
     
     private VistaDevoluciones vista;
-    private DevolucionController devolucionController;
+    private List<Devolucion> devoluciones;
     
     /**
-     * Constructor del controlador de vista de devoluciones.
-     * 
-     * @param vista La vista de devoluciones
-     * @param devolucionController El controlador de devoluciones
+     * Constructor del controlador
+     * @param vista La vista de devoluciones asociada
      */
-    public VistaDevolucionesController(VistaDevoluciones vista, DevolucionController devolucionController) {
+    public VistaDevolucionesController(VistaDevoluciones vista) {
         this.vista = vista;
-        this.devolucionController = devolucionController;
-        
-        // Inicializar los listeners y componentes de la vista
-        inicializarVista();
+        this.devoluciones = new ArrayList<>();
+        cargarDatosDePrueba();
+        actualizarTabla();
     }
     
     /**
-     * Inicializa los componentes de la vista y configura los listeners.
+     * Carga datos de prueba para la tabla de devoluciones
      */
-    private void inicializarVista() {
-        // Cargar las devoluciones al iniciar la vista
-        cargarDevoluciones();
+    private void cargarDatosDePrueba() {
+        // Esto simularía la carga desde una base de datos
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         
-        // Configurar listeners para los botones de la vista
-        configurarListeners();
-    }
-    
-    /**
-     * Configura los listeners para los botones y componentes interactivos de la vista.
-     */
-    private void configurarListeners() {
-        // Listener para el botón de buscar devolución
-        vista.getBtnBuscar().addActionListener(e -> buscarDevolucionPorId());
-        
-        // Listener para el botón de mostrar todas las devoluciones
-        vista.getBtnMostrarTodas().addActionListener(e -> cargarDevoluciones());
-        
-        // Listener para el botón de nueva devolución
-        vista.getBtnNuevaDevolucion().addActionListener(e -> abrirFormularioNuevaDevolucion());
-        
-        // Listener para el botón de editar devolución
-        vista.getBtnEditar().addActionListener(e -> editarDevolucionSeleccionada());
-        
-        // Listener para el botón de eliminar devolución
-        vista.getBtnEliminar().addActionListener(e -> eliminarDevolucionSeleccionada());
-        
-        // Listener para filtro por fecha
-        vista.getBtnFiltrarPorFecha().addActionListener(e -> filtrarDevolucionesPorFecha());
-        
-        // Listener para exportar a PDF
-        vista.getBtnExportarPDF().addActionListener(e -> exportarAFormato("PDF"));
-        
-        // Listener para exportar a Excel
-        vista.getBtnExportarExcel().addActionListener(e -> exportarAFormato("Excel"));
-    }
-    
-    /**
-     * Carga todas las devoluciones en la tabla de la vista.
-     */
-    public void cargarDevoluciones() {
-        List<Devolucion> devoluciones = devolucionController.obtenerTodasDevoluciones();
-        vista.mostrarDevoluciones(devoluciones);
-    }
-    
-    /**
-     * Busca una devolución por su ID y la muestra en la vista.
-     */
-    private void buscarDevolucionPorId() {
         try {
-            String idTexto = vista.getTxtBusqueda().getText();
-            if (idTexto.isEmpty()) {
-                vista.mostrarMensaje("Ingrese un ID para buscar");
-                return;
-            }
-            
-            int id = Integer.parseInt(idTexto);
-            Devolucion devolucion = devolucionController.buscarDevolucionPorId(id);
-            
-            if (devolucion != null) {
-                vista.mostrarDevolucion(devolucion);
-            } else {
-                vista.mostrarMensaje("No se encontró ninguna devolución con el ID: " + id);
-            }
-        } catch (NumberFormatException e) {
-            vista.mostrarMensaje("El ID debe ser un número entero");
-        }
-    }
-    
-    /**
-     * Abre el formulario para crear una nueva devolución.
-     */
-    private void abrirFormularioNuevaDevolucion() {
-        vista.mostrarFormularioDevolucion(null);
-    }
-    
-    /**
-     * Edita la devolución seleccionada en la tabla.
-     */
-    private void editarDevolucionSeleccionada() {
-        Devolucion devolucionSeleccionada = vista.obtenerDevolucionSeleccionada();
-        
-        if (devolucionSeleccionada != null) {
-            vista.mostrarFormularioDevolucion(devolucionSeleccionada);
-        } else {
-            vista.mostrarMensaje("Seleccione una devolución para editar");
-        }
-    }
-    
-    /**
-     * Elimina la devolución seleccionada en la tabla.
-     */
-    private void eliminarDevolucionSeleccionada() {
-        Devolucion devolucionSeleccionada = vista.obtenerDevolucionSeleccionada();
-        
-        if (devolucionSeleccionada != null) {
-            boolean confirmacion = vista.mostrarConfirmacion("¿Está seguro de eliminar esta devolución?");
-            
-            if (confirmacion) {
-                boolean eliminado = devolucionController.eliminarDevolucion(devolucionSeleccionada.getId());
-                
-                if (eliminado) {
-                    vista.mostrarMensaje("Devolución eliminada correctamente");
-                    cargarDevoluciones();
-                } else {
-                    vista.mostrarMensaje("No se pudo eliminar la devolución");
-                }
-            }
-        } else {
-            vista.mostrarMensaje("Seleccione una devolución para eliminar");
-        }
-    }
-    
-    /**
-     * Filtra las devoluciones por un rango de fechas.
-     */
-    private void filtrarDevolucionesPorFecha() {
-        try {
-            java.util.Date fechaInicio = vista.getFechaInicio().getDate();
-            java.util.Date fechaFin = vista.getFechaFin().getDate();
-            
-            if (fechaInicio == null || fechaFin == null) {
-                vista.mostrarMensaje("Seleccione un rango de fechas válido");
-                return;
-            }
-            
-            List<Devolucion> devolucionesFiltradas = devolucionController.filtrarDevolucionesPorFecha(fechaInicio, fechaFin);
-            vista.mostrarDevoluciones(devolucionesFiltradas);
-            
+            devoluciones.add(new Devolucion(1, "V100", "Juan Pérez", sdf.parse("2025-04-10"), "Producto defectuoso", "Pendiente"));
+            devoluciones.add(new Devolucion(2, "V101", "María López", sdf.parse("2025-04-09"), "Producto incorrecto", "Aprobada"));
+            devoluciones.add(new Devolucion(3, "V102", "Carlos Gómez", sdf.parse("2025-04-08"), "Insatisfacción con el producto", "Rechazada"));
+            devoluciones.add(new Devolucion(4, "V103", "Ana Martínez", sdf.parse("2025-04-07"), "Otro", "Pendiente"));
         } catch (Exception e) {
-            vista.mostrarMensaje("Error al filtrar por fecha: " + e.getMessage());
+            System.err.println("Error al cargar datos de prueba: " + e.getMessage());
         }
     }
     
     /**
-     * Exporta las devoluciones mostradas a un formato específico.
-     * 
-     * @param formato El formato de exportación ("PDF" o "Excel")
+     * Registra una nueva devolución
      */
-    private void exportarAFormato(String formato) {
-        List<Devolucion> devoluciones = vista.obtenerDevolucionesMostradas();
-        
-        if (devoluciones.isEmpty()) {
-            vista.mostrarMensaje("No hay datos para exportar");
+    public void registrarDevolucion(String idVenta, String cliente, Date fecha, String motivo, String descripcion) {
+        // Verificar que los campos obligatorios no estén vacíos
+        if (idVenta == null || idVenta.trim().isEmpty() || cliente == null || cliente.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Los campos ID Venta y Cliente son obligatorios",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
             return;
         }
         
-        String rutaArchivo = vista.seleccionarRutaGuardado(formato);
+        // Generar un nuevo ID
+        int nuevoId = devoluciones.size() > 0 ? 
+            devoluciones.get(devoluciones.size() - 1).getId() + 1 : 1;
         
-        if (rutaArchivo != null) {
-            boolean exportado = false;
+        // Crear y agregar la nueva devolución
+        Devolucion nuevaDevolucion = new Devolucion(nuevoId, idVenta, cliente, fecha, motivo, "Pendiente");
+        devoluciones.add(nuevaDevolucion);
+        
+        // Actualizar la tabla
+        actualizarTabla();
+        
+        JOptionPane.showMessageDialog(vista.getPanel(), 
+            "Devolución registrada correctamente", 
+            "Éxito", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    /**
+     * Aprueba una devolución seleccionada
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     */
+    public void aprobarDevolucion(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < devoluciones.size()) {
+            Devolucion devolucion = devoluciones.get(filaSeleccionada);
             
-            if ("PDF".equals(formato)) {
-                exportado = devolucionController.exportarAPDF(devoluciones, rutaArchivo);
-            } else if ("Excel".equals(formato)) {
-                exportado = devolucionController.exportarAExcel(devoluciones, rutaArchivo);
-            }
-            
-            if (exportado) {
-                vista.mostrarMensaje("Datos exportados correctamente a " + formato);
+            if ("Pendiente".equals(devolucion.getEstado())) {
+                int confirmar = JOptionPane.showConfirmDialog(vista.getPanel(),
+                    "¿Está seguro de aprobar esta devolución?",
+                    "Confirmar aprobación",
+                    JOptionPane.YES_NO_OPTION);
+                
+                if (confirmar == JOptionPane.YES_OPTION) {
+                    devolucion.setEstado("Aprobada");
+                    actualizarTabla();
+                    JOptionPane.showMessageDialog(vista.getPanel(),
+                        "Devolución aprobada correctamente",
+                        "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
             } else {
-                vista.mostrarMensaje("Error al exportar a " + formato);
+                JOptionPane.showMessageDialog(vista.getPanel(),
+                    "Solo se pueden aprobar devoluciones en estado Pendiente",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             }
+        } else {
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar una devolución",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
     
     /**
-     * Guarda una devolución nueva o actualizada.
-     * 
-     * @param devolucion La devolución a guardar
-     * @param esNueva Indica si es una nueva devolución o una actualización
-     * @return true si se guardó correctamente, false en caso contrario
+     * Rechaza una devolución seleccionada
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     * @param motivo Motivo del rechazo
      */
-    public boolean guardarDevolucion(Devolucion devolucion, boolean esNueva) {
-        boolean resultado;
-        
-        if (esNueva) {
-            resultado = devolucionController.crearDevolucion(devolucion);
+    public void rechazarDevolucion(int filaSeleccionada, String motivo) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < devoluciones.size()) {
+            Devolucion devolucion = devoluciones.get(filaSeleccionada);
+            
+            if ("Pendiente".equals(devolucion.getEstado())) {
+                if (motivo != null && !motivo.trim().isEmpty()) {
+                    devolucion.setEstado("Rechazada");
+                    actualizarTabla();
+                    JOptionPane.showMessageDialog(vista.getPanel(),
+                        "Devolución rechazada correctamente",
+                        "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(vista.getPanel(),
+                        "Debe ingresar un motivo para rechazar la devolución",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(vista.getPanel(),
+                    "Solo se pueden rechazar devoluciones en estado Pendiente",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            }
         } else {
-            resultado = devolucionController.actualizarDevolucion(devolucion);
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar una devolución",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Muestra el detalle de una devolución seleccionada
+     * @param filaSeleccionada Índice de la fila seleccionada en la tabla
+     */
+    public void verDetalleDevolucion(int filaSeleccionada) {
+        if (filaSeleccionada >= 0 && filaSeleccionada < devoluciones.size()) {
+            Devolucion devolucion = devoluciones.get(filaSeleccionada);
+            
+            // Aquí se mostraría un diálogo con los detalles de la devolución
+            // Por ahora solo mostramos un mensaje
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Detalles de la Devolución #" + devolucion.getId() + "\n\n" +
+                "ID Venta: " + devolucion.getIdVenta() + "\n" +
+                "Cliente: " + devolucion.getCliente() + "\n" +
+                "Fecha: " + sdf.format(devolucion.getFecha()) + "\n" +
+                "Motivo: " + devolucion.getMotivo() + "\n" +
+                "Estado: " + devolucion.getEstado(),
+                "Detalle de Devolución",
+                JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(vista.getPanel(),
+                "Debe seleccionar una devolución",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Busca devoluciones según un criterio
+     * @param criterioBusqueda El texto a buscar
+     */
+    public void buscarDevoluciones(String criterioBusqueda) {
+        if (criterioBusqueda == null || criterioBusqueda.trim().isEmpty()) {
+            actualizarTabla();
+            return;
         }
         
-        if (resultado) {
-            cargarDevoluciones();
+        criterioBusqueda = criterioBusqueda.toLowerCase();
+        List<Devolucion> resultados = new ArrayList<>();
+        
+        for (Devolucion d : devoluciones) {
+            if (String.valueOf(d.getId()).contains(criterioBusqueda) ||
+                d.getIdVenta().toLowerCase().contains(criterioBusqueda) ||
+                d.getCliente().toLowerCase().contains(criterioBusqueda) ||
+                d.getMotivo().toLowerCase().contains(criterioBusqueda) ||
+                d.getEstado().toLowerCase().contains(criterioBusqueda)) {
+                
+                resultados.add(d);
+            }
         }
         
-        return resultado;
+        actualizarTablaConResultados(resultados);
+    }
+    
+    /**
+     * Filtra las devoluciones por estado
+     * @param estado El estado por el que filtrar
+     */
+    public void filtrarPorEstado(String estado) {
+        if ("Todos".equals(estado)) {
+            actualizarTabla();
+            return;
+        }
+        
+        List<Devolucion> resultados = new ArrayList<>();
+        
+        for (Devolucion d : devoluciones) {
+            if (d.getEstado().equals(estado)) {
+                resultados.add(d);
+            }
+        }
+        
+        actualizarTablaConResultados(resultados);
+    }
+    
+    /**
+     * Actualiza la tabla con la lista completa de devoluciones
+     */
+    private void actualizarTabla() {
+        actualizarTablaConResultados(devoluciones);
+    }
+    
+    /**
+     * Actualiza la tabla con una lista específica de devoluciones
+     * @param listaDevoluciones Lista de devoluciones a mostrar
+     */
+    private void actualizarTablaConResultados(List<Devolucion> listaDevoluciones) {
+        Object[][] datos = new Object[listaDevoluciones.size()][6];
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        
+        for (int i = 0; i < listaDevoluciones.size(); i++) {
+            Devolucion d = listaDevoluciones.get(i);
+            datos[i][0] = d.getId();
+            datos[i][1] = d.getIdVenta();
+            datos[i][2] = d.getCliente();
+            datos[i][3] = sdf.format(d.getFecha());
+            datos[i][4] = d.getMotivo();
+            datos[i][5] = d.getEstado();
+        }
+        
+        vista.actualizarTablaDevoluciones(datos);
+    }
+    
+    /**
+     * Clase interna para representar una devolución
+     */
+    private class Devolucion {
+        private int id;
+        private String idVenta;
+        private String cliente;
+        private Date fecha;
+        private String motivo;
+        private String estado;
+        
+        public Devolucion(int id, String idVenta, String cliente, Date fecha, String motivo, String estado) {
+            this.id = id;
+            this.idVenta = idVenta;
+            this.cliente = cliente;
+            this.fecha = fecha;
+            this.motivo = motivo;
+            this.estado = estado;
+        }
+        
+        public int getId() {
+            return id;
+        }
+        
+        public String getIdVenta() {
+            return idVenta;
+        }
+        
+        public String getCliente() {
+            return cliente;
+        }
+        
+        public Date getFecha() {
+            return fecha;
+        }
+        
+        public String getMotivo() {
+            return motivo;
+        }
+        
+        public String getEstado() {
+            return estado;
+        }
+        
+        public void setEstado(String estado) {
+            this.estado = estado;
+        }
     }
 }

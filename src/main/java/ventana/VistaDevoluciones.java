@@ -1,704 +1,341 @@
 package ventana;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.List;
+import java.awt.event.*;
 import java.util.Date;
-
-import controlador.VistaDevolucionesController;
-import controlador.DevolucionController;
-import modelo.Devolucion;
-import com.toedter.calendar.JDateChooser;
+import java.text.SimpleDateFormat;
 
 /**
- * Vista para la gestión de devoluciones.
- * Permite visualizar, crear, editar y eliminar devoluciones.
+ * Vista para gestionar las devoluciones de la tienda de PC
  */
-public class VistaDevoluciones extends JPanel {
-    // Componentes principales
-    private JTextField txtBusqueda;
+public class VistaDevoluciones {
+    
+    private JPanel mainPanel;
     private JTable tablaDevoluciones;
-    private JButton btnBuscar;
-    private JButton btnMostrarTodas;
-    private JButton btnNuevaDevolucion;
-    private JButton btnEditar;
-    private JButton btnEliminar;
-    private JButton btnFiltrarPorFecha;
-    private JButton btnExportarPDF;
-    private JButton btnExportarExcel;
-    private JDateChooser fechaInicio;
-    private JDateChooser fechaFin;
-    
-    // Paneles para vistas múltiples
-    private JPanel listadoPanel;
-    private JPanel formularioPanel;
-    private CardLayout cardLayout;
-    
-    // Campos del formulario
-    private JTextField txtNumeroFactura;
-    private JTextField txtCliente;
-    private JButton btnBuscarFactura;
-    private JDateChooser fechaDevolucion;
-    private JTextField txtProducto;
-    private JTextField txtCantidad;
-    private JComboBox<String> comboMotivo;
-    private JTextArea txtObservaciones;
-    private JButton btnGuardar;
-    private JButton btnCancelar;
-    
-    // Controlador
-    private VistaDevolucionesController controller;
-    
-    // Variables de estado
-    private boolean editando = false;
-    private Devolucion devolucionEnEdicion = null;
+    private JScrollPane scrollPane;
+    private JButton btnRegistrar, btnAprobar, btnRechazar, btnVerDetalle, btnBuscar, btnVolver;
+    private JTextField txtBuscar;
+    private JComboBox<String> comboEstado;
     
     /**
-     * Constructor de la vista de devoluciones.
+     * Constructor de la vista de devoluciones
      */
     public VistaDevoluciones() {
-        setLayout(new BorderLayout());
-        inicializarPanel();
+        inicializarComponentes();
+        configurarEventos();
     }
     
     /**
-     * Constructor con controlador.
-     * 
-     * @param devolucionController El controlador de devoluciones
+     * Inicializa los componentes de la interfaz
      */
-    public VistaDevoluciones(DevolucionController devolucionController) {
-        setLayout(new BorderLayout());
-        inicializarPanel();
-        
-        controller = new VistaDevolucionesController(this, devolucionController);
-        configurarListeners();
-    }
-    
-    /**
-     * Inicializa todos los componentes del panel.
-     */
-    private void inicializarPanel() {
-        // Header
-        JPanel headerPanel = crearHeaderPanel();
-        
-        // Panel principal con CardLayout para cambiar entre vistas
-        cardLayout = new CardLayout();
-        JPanel mainPanel = new JPanel(cardLayout);
-        
-        // Crear panel de listado
-        listadoPanel = crearPanelListado();
-        
-        // Crear panel de formulario
-        formularioPanel = crearPanelFormulario();
-        
-        // Añadir paneles al panel principal
-        mainPanel.add(listadoPanel, "LISTADO");
-        mainPanel.add(formularioPanel, "FORMULARIO");
-        
+    private void inicializarComponentes() {
         // Panel principal
-        add(headerPanel, BorderLayout.NORTH);
-        add(mainPanel, BorderLayout.CENTER);
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
         
-        // Mostrar vista de listado por defecto
-        cardLayout.show(mainPanel, "LISTADO");
-    }
-    
-    /**
-     * Configura los listeners para los componentes.
-     */
-    private void configurarListeners() {
-        if (controller != null) {
-            // Botones del panel de listado
-            btnBuscar.addActionListener(e -> controller.buscarDevolucionPorId());
-            btnMostrarTodas.addActionListener(e -> controller.cargarDevoluciones());
-            btnNuevaDevolucion.addActionListener(e -> controller.abrirFormularioNuevaDevolucion());
-            btnEditar.addActionListener(e -> controller.editarDevolucionSeleccionada());
-            btnEliminar.addActionListener(e -> controller.eliminarDevolucionSeleccionada());
-            btnFiltrarPorFecha.addActionListener(e -> controller.filtrarDevolucionesPorFecha());
-            btnExportarPDF.addActionListener(e -> controller.exportarAFormato("PDF"));
-            btnExportarExcel.addActionListener(e -> controller.exportarAFormato("Excel"));
-            
-            // Botones del panel de formulario
-            btnBuscarFactura.addActionListener(e -> controller.buscarFactura());
-            btnGuardar.addActionListener(e -> {
-                Devolucion devolucion = obtenerDevolucionDesdeFormulario();
-                controller.guardarDevolucion(devolucion, !editando);
-            });
-            btnCancelar.addActionListener(e -> mostrarListado());
-        }
-    }
-    
-    /**
-     * Crea el panel header.
-     */
-    private JPanel crearHeaderPanel() {
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setPreferredSize(new Dimension(0, 60));
-        headerPanel.setBackground(new Color(52, 73, 94));
-        
-        JLabel titleLabel = new JLabel("Sistema de Gestión - Devoluciones");
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        titleLabel.setHorizontalAlignment(JLabel.CENTER);
-        headerPanel.add(titleLabel, BorderLayout.CENTER);
-        
-        return headerPanel;
-    }
-    
-    /**
-     * Crea el panel para el listado de devoluciones.
-     * 
-     * @return Panel configurado con la tabla y controles
-     */
-    private JPanel crearPanelListado() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
-        // Título
-        JLabel titleLabel = new JLabel("Listado de Devoluciones");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        panel.add(titleLabel, BorderLayout.NORTH);
+        // Panel superior para búsqueda y filtros
+        JPanel panelSuperior = new JPanel(new BorderLayout());
         
         // Panel de búsqueda
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        
-        searchPanel.add(new JLabel("Buscar por ID:"));
-        txtBusqueda = new JTextField(10);
-        searchPanel.add(txtBusqueda);
-        
+        JPanel panelBusqueda = new JPanel();
+        txtBuscar = new JTextField(20);
         btnBuscar = new JButton("Buscar");
-        btnBuscar.setBackground(new Color(74, 134, 232));
-        btnBuscar.setForeground(Color.WHITE);
-        searchPanel.add(btnBuscar);
+        panelBusqueda.add(new JLabel("Buscar: "));
+        panelBusqueda.add(txtBuscar);
+        panelBusqueda.add(btnBuscar);
+        panelSuperior.add(panelBusqueda, BorderLayout.NORTH);
         
-        btnMostrarTodas = new JButton("Mostrar Todas");
-        btnMostrarTodas.setBackground(new Color(74, 134, 232));
-        btnMostrarTodas.setForeground(Color.WHITE);
-        searchPanel.add(btnMostrarTodas);
+        // Panel de filtros
+        JPanel panelFiltros = new JPanel();
+        panelFiltros.add(new JLabel("Estado:"));
+        comboEstado = new JComboBox<>(new String[]{"Todos", "Pendiente", "Aprobada", "Rechazada"});
+        panelFiltros.add(comboEstado);
+        panelSuperior.add(panelFiltros, BorderLayout.SOUTH);
         
-        // Panel de filtro por fecha
-        JPanel filtroPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        filtroPanel.add(new JLabel("Desde:"));
-        fechaInicio = new JDateChooser();
-        fechaInicio.setPreferredSize(new Dimension(100, 25));
-        filtroPanel.add(fechaInicio);
-        
-        filtroPanel.add(new JLabel("Hasta:"));
-        fechaFin = new JDateChooser();
-        fechaFin.setPreferredSize(new Dimension(100, 25));
-        filtroPanel.add(fechaFin);
-        
-        btnFiltrarPorFecha = new JButton("Filtrar por Fecha");
-        btnFiltrarPorFecha.setBackground(new Color(74, 134, 232));
-        btnFiltrarPorFecha.setForeground(Color.WHITE);
-        filtroPanel.add(btnFiltrarPorFecha);
+        mainPanel.add(panelSuperior, BorderLayout.NORTH);
         
         // Tabla de devoluciones
-        String[] columnNames = {"ID", "Factura", "Cliente", "Fecha", "Producto", "Cantidad", "Motivo", "Estado"};
-        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+        String[] columnas = {"ID", "ID Venta", "Cliente", "Fecha", "Motivo", "Estado"};
+        Object[][] datos = {}; // Sin datos iniciales
+        
+        DefaultTableModel modelo = new DefaultTableModel(datos, columnas) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // No permitir edición directa en la tabla
+                return false; // No permitir edición directa
             }
         };
         
-        tablaDevoluciones = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(tablaDevoluciones);
-        scrollPane.setPreferredSize(new Dimension(0, 300));
+        tablaDevoluciones = new JTable(modelo);
+        tablaDevoluciones.getTableHeader().setReorderingAllowed(false);
+        tablaDevoluciones.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        // Panel de acciones
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        scrollPane = new JScrollPane(tablaDevoluciones);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
         
-        btnNuevaDevolucion = new JButton("Nueva Devolución");
-        btnNuevaDevolucion.setBackground(new Color(76, 175, 80));
-        btnNuevaDevolucion.setForeground(Color.WHITE);
-        actionPanel.add(btnNuevaDevolucion);
+        // Panel inferior para botones
+        JPanel panelInferior = new JPanel();
+        btnRegistrar = new JButton("Registrar Devolución");
+        btnAprobar = new JButton("Aprobar");
+        btnRechazar = new JButton("Rechazar");
+        btnVerDetalle = new JButton("Ver Detalle");
+        btnVolver = new JButton("Volver");
         
-        btnEditar = new JButton("Editar");
-        btnEditar.setBackground(new Color(255, 152, 0));
-        btnEditar.setForeground(Color.WHITE);
-        actionPanel.add(btnEditar);
+        panelInferior.add(btnRegistrar);
+        panelInferior.add(btnAprobar);
+        panelInferior.add(btnRechazar);
+        panelInferior.add(btnVerDetalle);
+        panelInferior.add(btnVolver);
         
-        btnEliminar = new JButton("Eliminar");
-        btnEliminar.setBackground(new Color(244, 67, 54));
-        btnEliminar.setForeground(Color.WHITE);
-        actionPanel.add(btnEliminar);
-        
-        // Panel de exportación
-        JPanel exportPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        
-        btnExportarPDF = new JButton("Exportar a PDF");
-        btnExportarPDF.setBackground(new Color(183, 28, 28));
-        btnExportarPDF.setForeground(Color.WHITE);
-        exportPanel.add(btnExportarPDF);
-        
-        btnExportarExcel = new JButton("Exportar a Excel");
-        btnExportarExcel.setBackground(new Color(46, 125, 50));
-        btnExportarExcel.setForeground(Color.WHITE);
-        exportPanel.add(btnExportarExcel);
-        
-        // Panel inferior que combina acciones y exportación
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(actionPanel, BorderLayout.WEST);
-        bottomPanel.add(exportPanel, BorderLayout.EAST);
-        
-        // Panel de búsqueda completo
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(searchPanel, BorderLayout.NORTH);
-        topPanel.add(filtroPanel, BorderLayout.SOUTH);
-        
-        // Añadir todo al panel
-        JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
-        contentPanel.add(topPanel, BorderLayout.NORTH);
-        contentPanel.add(scrollPane, BorderLayout.CENTER);
-        contentPanel.add(bottomPanel, BorderLayout.SOUTH);
-        
-        panel.add(contentPanel, BorderLayout.CENTER);
-        
-        return panel;
+        mainPanel.add(panelInferior, BorderLayout.SOUTH);
     }
     
     /**
-     * Crea el panel para el formulario de devoluciones.
-     * 
-     * @return Panel configurado con el formulario
+     * Configura los eventos de los componentes
      */
-    private JPanel crearPanelFormulario() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    private void configurarEventos() {
+        btnRegistrar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mostrarDialogoRegistrarDevolucion();
+            }
+        });
         
-        // Título
-        JLabel titleLabel = new JLabel("Nueva Devolución");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        panel.add(titleLabel, BorderLayout.NORTH);
+        btnAprobar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int filaSeleccionada = tablaDevoluciones.getSelectedRow();
+                if (filaSeleccionada >= 0) {
+                    String estadoActual = (String) tablaDevoluciones.getValueAt(filaSeleccionada, 5);
+                    if ("Pendiente".equals(estadoActual)) {
+                        int confirmar = JOptionPane.showConfirmDialog(mainPanel,
+                            "¿Está seguro de aprobar esta devolución?",
+                            "Confirmar aprobación",
+                            JOptionPane.YES_NO_OPTION);
+                        
+                        if (confirmar == JOptionPane.YES_OPTION) {
+                            // Aquí iría la lógica para aprobar la devolución
+                            tablaDevoluciones.setValueAt("Aprobada", filaSeleccionada, 5);
+                            JOptionPane.showMessageDialog(mainPanel,
+                                "Devolución aprobada correctamente",
+                                "Éxito",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(mainPanel,
+                            "Solo se pueden aprobar devoluciones en estado Pendiente",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(mainPanel,
+                        "Debe seleccionar una devolución",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         
-        // Formulario
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        btnRechazar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int filaSeleccionada = tablaDevoluciones.getSelectedRow();
+                if (filaSeleccionada >= 0) {
+                    String estadoActual = (String) tablaDevoluciones.getValueAt(filaSeleccionada, 5);
+                    if ("Pendiente".equals(estadoActual)) {
+                        String motivo = JOptionPane.showInputDialog(mainPanel,
+                            "Ingrese el motivo del rechazo:",
+                            "Motivo de rechazo",
+                            JOptionPane.QUESTION_MESSAGE);
+                        
+                        if (motivo != null && !motivo.trim().isEmpty()) {
+                            // Aquí iría la lógica para rechazar la devolución
+                            tablaDevoluciones.setValueAt("Rechazada", filaSeleccionada, 5);
+                            JOptionPane.showMessageDialog(mainPanel,
+                                "Devolución rechazada correctamente",
+                                "Éxito",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(mainPanel,
+                            "Solo se pueden rechazar devoluciones en estado Pendiente",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(mainPanel,
+                        "Debe seleccionar una devolución",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         
-        // Número de factura
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        formPanel.add(new JLabel("Número de Factura:"), gbc);
+        btnVerDetalle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int filaSeleccionada = tablaDevoluciones.getSelectedRow();
+                if (filaSeleccionada >= 0) {
+                    // Aquí iría la lógica para mostrar el detalle de la devolución
+                    JOptionPane.showMessageDialog(mainPanel,
+                        "Detalles de la devolución " + tablaDevoluciones.getValueAt(filaSeleccionada, 0),
+                        "Detalle de Devolución",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(mainPanel,
+                        "Debe seleccionar una devolución",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
         
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        txtNumeroFactura = new JTextField(15);
-        formPanel.add(txtNumeroFactura, gbc);
+        btnBuscar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String criterioBusqueda = txtBuscar.getText().trim();
+                // Aquí iría la lógica para buscar devoluciones
+                JOptionPane.showMessageDialog(mainPanel,
+                    "Buscando: " + criterioBusqueda,
+                    "Búsqueda",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
         
-        gbc.gridx = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        btnBuscarFactura = new JButton("Buscar");
-        btnBuscarFactura.setBackground(new Color(74, 134, 232));
-        btnBuscarFactura.setForeground(Color.WHITE);
-        formPanel.add(btnBuscarFactura, gbc);
+        comboEstado.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String estadoSeleccionado = (String) comboEstado.getSelectedItem();
+                // Aquí iría la lógica para filtrar por estado
+                JOptionPane.showMessageDialog(mainPanel,
+                    "Filtrando por estado: " + estadoSeleccionado,
+                    "Filtro aplicado",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
         
-        // Cliente
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        formPanel.add(new JLabel("Cliente:"), gbc);
+        btnVolver.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // No hacemos nada específico para volver
+            }
+        });
+    }
+    
+    /**
+     * Muestra un diálogo para registrar una nueva devolución
+     */
+    private void mostrarDialogoRegistrarDevolucion() {
+        JDialog dialogo = new JDialog((JFrame)SwingUtilities.getWindowAncestor(mainPanel), "Registrar Devolución", true);
+        dialogo.setSize(400, 300);
+        dialogo.setLocationRelativeTo(mainPanel);
+        dialogo.setLayout(new BorderLayout());
         
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        gbc.gridwidth = 2;
-        txtCliente = new JTextField(30);
-        txtCliente.setEditable(false);
-        formPanel.add(txtCliente, gbc);
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(5, 2, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Fecha de devolución
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 1;
-        formPanel.add(new JLabel("Fecha de Devolución:"), gbc);
+        panel.add(new JLabel("ID Venta:"));
+        JTextField txtIdVenta = new JTextField();
+        panel.add(txtIdVenta);
         
-        gbc.gridx = 1;
-        fechaDevolucion = new JDateChooser();
-        fechaDevolucion.setDate(new Date());
-        formPanel.add(fechaDevolucion, gbc);
+        panel.add(new JLabel("Cliente:"));
+        JTextField txtCliente = new JTextField();
+        panel.add(txtCliente);
         
-        // Producto
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        formPanel.add(new JLabel("Producto:"), gbc);
+        panel.add(new JLabel("Fecha:"));
+        JTextField txtFecha = new JTextField(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        txtFecha.setEditable(false);
+        panel.add(txtFecha);
         
-        gbc.gridx = 1;
-        gbc.gridwidth = 2;
-        txtProducto = new JTextField(30);
-        formPanel.add(txtProducto, gbc);
-        
-        // Cantidad
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 1;
-        formPanel.add(new JLabel("Cantidad:"), gbc);
-        
-        gbc.gridx = 1;
-        txtCantidad = new JTextField(10);
-        formPanel.add(txtCantidad, gbc);
-        
-        // Motivo
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        formPanel.add(new JLabel("Motivo:"), gbc);
-        
-        gbc.gridx = 1;
-        gbc.gridwidth = 2;
-        comboMotivo = new JComboBox<>(new String[] {
+        panel.add(new JLabel("Motivo:"));
+        JComboBox<String> comboMotivo = new JComboBox<>(new String[]{
             "Producto defectuoso", 
-            "Producto dañado", 
             "Producto incorrecto", 
-            "No cumple expectativas", 
+            "Insatisfacción con el producto", 
             "Otro"
         });
-        formPanel.add(comboMotivo, gbc);
+        panel.add(comboMotivo);
         
-        // Observaciones
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.gridwidth = 1;
-        formPanel.add(new JLabel("Observaciones:"), gbc);
+        panel.add(new JLabel("Descripción:"));
+        JTextArea txtDescripcion = new JTextArea();
+        JScrollPane scrollDescripcion = new JScrollPane(txtDescripcion);
+        panel.add(scrollDescripcion);
         
-        gbc.gridx = 1;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        txtObservaciones = new JTextArea(5, 30);
-        txtObservaciones.setLineWrap(true);
-        txtObservaciones.setWrapStyleWord(true);
-        JScrollPane scrollPane = new JScrollPane(txtObservaciones);
-        formPanel.add(scrollPane, gbc);
+        dialogo.add(panel, BorderLayout.CENTER);
         
-        // Botones de acción
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel panelBotones = new JPanel();
+        JButton btnGuardar = new JButton("Guardar");
+        JButton btnCancelar = new JButton("Cancelar");
         
-        btnCancelar = new JButton("Cancelar");
-        btnCancelar.setBackground(new Color(158, 158, 158));
-        btnCancelar.setForeground(Color.WHITE);
-        buttonPanel.add(btnCancelar);
-        
-        btnGuardar = new JButton("Guardar");
-        btnGuardar.setBackground(new Color(76, 175, 80));
-        btnGuardar.setForeground(Color.WHITE);
-        buttonPanel.add(btnGuardar);
-        
-        // Añadir componentes al panel
-        panel.add(formPanel, BorderLayout.CENTER);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-        
-        return panel;
-    }
-    
-    /**
-     * Muestra el panel de listado.
-     */
-    public void mostrarListado() {
-        Component parent = getParent();
-        if (parent instanceof JPanel) {
-            CardLayout layout = (CardLayout) ((JPanel) parent).getLayout();
-            layout.show((JPanel) parent, "LISTADO");
-        } else {
-            cardLayout.show(getParent(), "LISTADO");
-        }
-    }
-    
-    /**
-     * Muestra el panel de formulario para una nueva devolución o edición.
-     * 
-     * @param devolucion La devolución a editar, o null para una nueva
-     */
-    public void mostrarFormularioDevolucion(Devolucion devolucion) {
-        limpiarFormulario();
-        
-        if (devolucion == null) {
-            // Nueva devolución
-            editando = false;
-            devolucionEnEdicion = null;
-            
-            // Actualizar título
-            JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
-            titleLabel.setText("Nueva Devolución");
-            
-            // Establecer valores por defecto
-            fechaDevolucion.setDate(new Date());
-        } else {
-            // Editar devolución existente
-            editando = true;
-            devolucionEnEdicion = devolucion;
-            
-            // Cargar datos de la devolución en el formulario
-            txtNumeroFactura.setText(devolucion.getNumeroFactura());
-            txtCliente.setText(devolucion.getCliente());
-            fechaDevolucion.setDate(devolucion.getFecha());
-            txtProducto.setText(devolucion.getProducto());
-            txtCantidad.setText(String.valueOf(devolucion.getCantidad()));
-            comboMotivo.setSelectedItem(devolucion.getMotivo());
-            txtObservaciones.setText(devolucion.getObservaciones());
-            
-            // Actualizar título
-            JLabel titleLabel = (JLabel) formularioPanel.getComponent(0);
-            titleLabel.setText("Editar Devolución");
-        }
-        
-        Component parent = getParent();
-        if (parent instanceof JPanel) {
-            CardLayout layout = (CardLayout) ((JPanel) parent).getLayout();
-            layout.show((JPanel) parent, "FORMULARIO");
-        } else {
-            cardLayout.show(getParent(), "FORMULARIO");
-        }
-    }
-    
-    /**
-     * Limpia todos los campos del formulario.
-     */
-    private void limpiarFormulario() {
-        txtNumeroFactura.setText("");
-        txtCliente.setText("");
-        fechaDevolucion.setDate(new Date());
-        txtProducto.setText("");
-        txtCantidad.setText("");
-        comboMotivo.setSelectedIndex(0);
-        txtObservaciones.setText("");
-    }
-    
-    /**
-     * Obtiene los datos de la devolución desde el formulario.
-     * 
-     * @return Devolución con los datos ingresados
-     */
-    public Devolucion obtenerDevolucionDesdeFormulario() {
-        Devolucion devolucion = new Devolucion();
-        
-        if (editando && devolucionEnEdicion != null) {
-            devolucion.setId(devolucionEnEdicion.getId());
-        }
-        
-        devolucion.setNumeroFactura(txtNumeroFactura.getText().trim());
-        devolucion.setCliente(txtCliente.getText().trim());
-        devolucion.setFecha(fechaDevolucion.getDate());
-        devolucion.setProducto(txtProducto.getText().trim());
-        
-        try {
-            devolucion.setCantidad(Integer.parseInt(txtCantidad.getText().trim()));
-        } catch (NumberFormatException e) {
-            devolucion.setCantidad(0);
-        }
-        
-        devolucion.setMotivo(comboMotivo.getSelectedItem().toString());
-        devolucion.setObservaciones(txtObservaciones.getText().trim());
-        devolucion.setEstado("Pendiente");
-        
-        return devolucion;
-    }
-    
-    /**
-     * Muestra las devoluciones en la tabla.
-     * 
-     * @param devoluciones Lista de devoluciones a mostrar
-     */
-    public void mostrarDevoluciones(List<Devolucion> devoluciones) {
-        DefaultTableModel model = (DefaultTableModel) tablaDevoluciones.getModel();
-        model.setRowCount(0); // Limpiar tabla
-        
-        for (Devolucion devolucion : devoluciones) {
-            model.addRow(new Object[] {
-                devolucion.getId(),
-                devolucion.getNumeroFactura(),
-                devolucion.getCliente(),
-                devolucion.getFecha(),
-                devolucion.getProducto(),
-                devolucion.getCantidad(),
-                devolucion.getMotivo(),
-                devolucion.getEstado()
-            });
-        }
-    }
-    
-    /**
-     * Muestra una sola devolución en la tabla.
-     * 
-     * @param devolucion La devolución a mostrar
-     */
-    public void mostrarDevolucion(Devolucion devolucion) {
-        DefaultTableModel model = (DefaultTableModel) tablaDevoluciones.getModel();
-        model.setRowCount(0); // Limpiar tabla
-        
-        model.addRow(new Object[] {
-            devolucion.getId(),
-            devolucion.getNumeroFactura(),
-            devolucion.getCliente(),
-            devolucion.getFecha(),
-            devolucion.getProducto(),
-            devolucion.getCantidad(),
-            devolucion.getMotivo(),
-            devolucion.getEstado()
-        });
-    }
-    
-    /**
-     * Obtiene la devolución seleccionada en la tabla.
-     * 
-     * @return Devolución seleccionada o null si no hay selección
-     */
-    public Devolucion obtenerDevolucionSeleccionada() {
-        int selectedRow = tablaDevoluciones.getSelectedRow();
-        
-        if (selectedRow < 0) {
-            return null;
-        }
-        
-        Devolucion devolucion = new Devolucion();
-        devolucion.setId((Integer) tablaDevoluciones.getValueAt(selectedRow, 0));
-        devolucion.setNumeroFactura((String) tablaDevoluciones.getValueAt(selectedRow, 1));
-        devolucion.setCliente((String) tablaDevoluciones.getValueAt(selectedRow, 2));
-        devolucion.setFecha((Date) tablaDevoluciones.getValueAt(selectedRow, 3));
-        devolucion.setProducto((String) tablaDevoluciones.getValueAt(selectedRow, 4));
-        devolucion.setCantidad((Integer) tablaDevoluciones.getValueAt(selectedRow, 5));
-        devolucion.setMotivo((String) tablaDevoluciones.getValueAt(selectedRow, 6));
-        devolucion.setEstado((String) tablaDevoluciones.getValueAt(selectedRow, 7));
-        
-        return devolucion;
-    }
-    
-    /**
-     * Obtiene todas las devoluciones mostradas en la tabla.
-     * 
-     * @return Lista con todas las devoluciones mostradas
-     */
-    public List<Devolucion> obtenerDevolucionesMostradas() {
-        List<Devolucion> devoluciones = new java.util.ArrayList<>();
-        DefaultTableModel model = (DefaultTableModel) tablaDevoluciones.getModel();
-        
-        for (int i = 0; i < model.getRowCount(); i++) {
-            Devolucion devolucion = new Devolucion();
-            devolucion.setId((Integer) model.getValueAt(i, 0));
-            devolucion.setNumeroFactura((String) model.getValueAt(i, 1));
-            devolucion.setCliente((String) model.getValueAt(i, 2));
-            devolucion.setFecha((Date) model.getValueAt(i, 3));
-            devolucion.setProducto((String) model.getValueAt(i, 4));
-            devolucion.setCantidad((Integer) model.getValueAt(i, 5));
-            devolucion.setMotivo((String) model.getValueAt(i, 6));
-            devolucion.setEstado((String) model.getValueAt(i, 7));
-            
-            devoluciones.add(devolucion);
-        }
-        
-        return devoluciones;
-    }
-    
-    /**
-     * Muestra un mensaje al usuario.
-     * 
-     * @param mensaje El mensaje a mostrar
-     */
-    public void mostrarMensaje(String mensaje) {
-        JOptionPane.showMessageDialog(this, mensaje, "Información", JOptionPane.INFORMATION_MESSAGE);
-    }
-    
-    /**
-     * Muestra un diálogo de confirmación.
-     * 
-     * @param mensaje El mensaje de confirmación
-     * @return true si el usuario confirma, false en caso contrario
-     */
-    public boolean mostrarConfirmacion(String mensaje) {
-        return JOptionPane.showConfirmDialog(
-            this,
-            mensaje, 
-            "Confirmación", 
-            JOptionPane.YES_NO_OPTION, 
-            JOptionPane.QUESTION_MESSAGE
-        ) == JOptionPane.YES_OPTION;
-    }
-    
-    /**
-     * Selecciona una ruta para guardar un archivo.
-     * 
-     * @param formato El formato del archivo (PDF o Excel)
-     * @return La ruta seleccionada o null si se cancela
-     */
-    public String seleccionarRutaGuardado(String formato) {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Guardar " + formato);
-        
-        String extension = formato.equalsIgnoreCase("PDF") ? ".pdf" : ".xlsx";
-        
-        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            String path = fileChooser.getSelectedFile().getAbsolutePath();
-            if (!path.toLowerCase().endsWith(extension)) {
-                path += extension;
+        btnGuardar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (txtIdVenta.getText().trim().isEmpty() || txtCliente.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(dialogo,
+                        "Los campos ID Venta y Cliente son obligatorios",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Aquí iría la lógica para guardar la devolución
+                // Por ahora solo agregamos una fila a la tabla como ejemplo
+                DefaultTableModel modelo = (DefaultTableModel) tablaDevoluciones.getModel();
+                Object[] fila = {
+                    modelo.getRowCount() + 1,
+                    txtIdVenta.getText(),
+                    txtCliente.getText(),
+                    txtFecha.getText(),
+                    comboMotivo.getSelectedItem(),
+                    "Pendiente"
+                };
+                modelo.addRow(fila);
+                
+                JOptionPane.showMessageDialog(dialogo,
+                    "Devolución registrada correctamente",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                dialogo.dispose();
             }
-            return path;
-        }
+        });
         
-        return null;
+        btnCancelar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialogo.dispose();
+            }
+        });
+        
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnCancelar);
+        
+        dialogo.add(panelBotones, BorderLayout.SOUTH);
+        dialogo.setVisible(true);
     }
     
     /**
-     * Establece el controlador para esta vista.
-     * 
-     * @param controller El controlador a establecer
+     * Actualiza la tabla de devoluciones con nuevos datos
+     * @param datos Los datos a mostrar en la tabla
      */
-    public void setController(VistaDevolucionesController controller) {
-        this.controller = controller;
-        configurarListeners();
+    public void actualizarTablaDevoluciones(Object[][] datos) {
+        String[] columnas = {"ID", "ID Venta", "Cliente", "Fecha", "Motivo", "Estado"};
+        DefaultTableModel modelo = new DefaultTableModel(datos, columnas) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tablaDevoluciones.setModel(modelo);
     }
     
-    // Getters para que el controlador pueda acceder a los componentes
-    
-    public JTextField getTxtBusqueda() {
-        return txtBusqueda;
-    }
-    
-    public JTable getTablaDevoluciones() {
-        return tablaDevoluciones;
-    }
-    
-    public JButton getBtnBuscar() {
-        return btnBuscar;
-    }
-    
-    public JButton getBtnMostrarTodas() {
-        return btnMostrarTodas;
-    }
-    
-    public JButton getBtnNuevaDevolucion() {
-        return btnNuevaDevolucion;
-    }
-    
-    public JButton getBtnEditar() {
-        return btnEditar;
-    }
-    
-    public JButton getBtnEliminar() {
-        return btnEliminar;
-    }
-    
-    public JButton getBtnFiltrarPorFecha() {
-        return btnFiltrarPorFecha;
-    }
-    
-    public JButton getBtnExportarPDF() {
-        return btnExportarPDF;
-    }
-    
-    public JButton getBtnExportarExcel() {
-        return btnExportarExcel;
-    }
-    
-    public JDateChooser getFechaInicio() {
-        return fechaInicio;
-    }
-    
-    public JDateChooser getFechaFin() {
-        return fechaFin;
+    /**
+     * Retorna el panel principal de la vista
+     * @return El panel principal
+     */
+    public JPanel getPanel() {
+        return mainPanel;
     }
 }
