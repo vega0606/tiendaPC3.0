@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Devolucion;
@@ -16,14 +16,14 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con devoluciones
  */
-public class DevolucionDAO implements DAO<Devolucion, String> {
-    private static final Logger logger = LoggerFactory.getLogger(DevolucionDAO.class);
-    private FacturaDAO facturaDAO;
-    private ProductoDAO productoDAO;
+public class DevolucionRepository implements Repository<Devolucion, String> {
+    private static final Logger logger = LoggerFactory.getLogger(DevolucionRepository.class);
+    private FacturaRepository facturaDAO;
+    private ProductoRepository productoDAO;
     
-    public DevolucionDAO() {
-        this.facturaDAO = new FacturaDAO();
-        this.productoDAO = new ProductoDAO();
+    public DevolucionRepository() {
+        this.facturaDAO = new FacturaRepository();
+        this.productoDAO = new ProductoRepository();
     }
     
     @Override

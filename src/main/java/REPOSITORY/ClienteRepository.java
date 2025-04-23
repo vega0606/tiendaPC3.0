@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Cliente;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con clientes
  */
-public class ClienteDAO implements DAO<Cliente, String> {
-    private static final Logger logger = LoggerFactory.getLogger(ClienteDAO.class);
+public class ClienteRepository implements Repository<Cliente, String> {
+    private static final Logger logger = LoggerFactory.getLogger(ClienteRepository.class);
     
     @Override
     public Cliente crear(Cliente cliente) throws Exception {

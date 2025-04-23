@@ -4,10 +4,12 @@ import modelo.Devolucion;
 import modelo.DetalleDevolucion;
 import modelo.Factura;
 import modelo.Producto;
-import DAO.DevolucionDAO;
-import DAO.FacturaDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.DevolucionRepository;
+import REPOSITORY.FacturaRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,13 +22,13 @@ import java.util.List;
  */
 public class DevolucionController {
     private static final Logger logger = LoggerFactory.getLogger(DevolucionController.class);
-    private DevolucionDAO devolucionDAO;
-    private FacturaDAO facturaDAO;
+    private DevolucionRepository devolucionDAO;
+    private FacturaRepository facturaDAO;
     private ProductoController productoController;
     
     public DevolucionController() {
-        devolucionDAO = new DevolucionDAO();
-        facturaDAO = new FacturaDAO();
+        devolucionDAO = new DevolucionRepository();
+        facturaDAO = new FacturaRepository();
         productoController = new ProductoController();
     }
     

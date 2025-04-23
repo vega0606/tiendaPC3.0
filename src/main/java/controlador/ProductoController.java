@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Producto;
-import DAO.ProductoDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.ProductoRepository;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,10 +16,10 @@ import java.util.List;
  */
 public class ProductoController {
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
-    private ProductoDAO productoDAO;
+    private ProductoRepository productoDAO;
     
     public ProductoController() {
-        productoDAO = new ProductoDAO();
+        productoDAO = new ProductoRepository();
     }
     
     /**

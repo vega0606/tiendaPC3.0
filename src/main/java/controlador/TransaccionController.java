@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Transaccion;
-import DAO.TransaccionDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.TransaccionRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,10 +19,10 @@ import java.util.Map;
  */
 public class TransaccionController {
     private static final Logger logger = LoggerFactory.getLogger(TransaccionController.class);
-    private TransaccionDAO transaccionDAO;
+    private TransaccionRepository transaccionDAO;
     
     public TransaccionController() {
-        transaccionDAO = new TransaccionDAO();
+        transaccionDAO = new TransaccionRepository();
     }
     
     /**

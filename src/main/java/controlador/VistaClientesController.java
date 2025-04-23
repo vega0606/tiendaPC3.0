@@ -1,6 +1,9 @@
 package controlador;
 
 import javax.swing.*;
+
+import REPOSITORY.ClienteRepository;
+
 import java.util.List;
 import java.io.File;
 import java.awt.event.ActionEvent;
@@ -13,7 +16,6 @@ import java.sql.Connection;
 import ventana.VistaClientes;
 import modelo.Cliente;
 import modelo.DatabaseConnector;
-import DAO.ClienteDAO;
 
 /**
  * Controlador para la vista de clientes.
@@ -23,7 +25,7 @@ public class VistaClientesController {
     
     private VistaClientes vista;
     private ClienteController clienteController;
-    private ClienteDAO clienteDAO;
+    private ClienteRepository clienteDAO;
     
     /**
      * Constructor del controlador.
@@ -34,7 +36,7 @@ public class VistaClientesController {
     public VistaClientesController(VistaClientes vista, ClienteController clienteController) {
         this.vista = vista;
         this.clienteController = clienteController;
-        this.clienteDAO = new ClienteDAO(); // Inicializar DAO directamente
+        this.clienteDAO = new ClienteRepository(); // Inicializar DAO directamente
         
         // Primero verificar la conexión a la base de datos
         verificarConexionBD();

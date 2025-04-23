@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Cliente;
-import DAO.ClienteDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.ClienteRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -15,13 +17,13 @@ import java.util.List;
  */
 public class ClienteController {
     private static final Logger logger = LoggerFactory.getLogger(ClienteController.class);
-    private ClienteDAO clienteDAO;
+    private ClienteRepository clienteDAO;
     
     /**
      * Constructor del controlador.
      */
     public ClienteController() {
-        this.clienteDAO = new ClienteDAO();
+        this.clienteDAO = new ClienteRepository();
     }
     
     /**

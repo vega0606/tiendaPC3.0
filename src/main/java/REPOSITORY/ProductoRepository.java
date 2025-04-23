@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Producto;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con productos
  */
-public class ProductoDAO implements DAO<Producto, String> {
-    private static final Logger logger = LoggerFactory.getLogger(ProductoDAO.class);
+public class ProductoRepository implements Repository<Producto, String> {
+    private static final Logger logger = LoggerFactory.getLogger(ProductoRepository.class);
     
     @Override
     public Producto crear(Producto producto) throws Exception {

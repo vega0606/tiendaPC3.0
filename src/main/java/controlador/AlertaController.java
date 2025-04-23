@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Alerta;
-import DAO.AlertaDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.AlertaRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -16,10 +18,10 @@ import java.util.Map;
  */
 public class AlertaController {
     private static final Logger logger = LoggerFactory.getLogger(AlertaController.class);
-    private AlertaDAO alertaDAO;
+    private AlertaRepository alertaDAO;
     
     public AlertaController() {
-        alertaDAO = new AlertaDAO();
+        alertaDAO = new AlertaRepository();
     }
     
     /**

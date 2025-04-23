@@ -1,4 +1,7 @@
-/META-INF/
+/servicio/
 /ventana/
+/util/
 /controlador/
-/modelo/
+/DAO/
+/META-INF/
+/REPOSITORY/

@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Categoria;
@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con categorías de productos
  */
-public class CategoriaDAO implements DAO<Categoria, Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(CategoriaDAO.class);
+public class CategoriaRepository implements Repository<Categoria, Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(CategoriaRepository.class);
     
     @Override
     public Categoria crear(Categoria categoria) throws Exception {

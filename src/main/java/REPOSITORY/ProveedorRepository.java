@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Proveedor;
@@ -14,8 +14,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con proveedores
  */
-public class ProveedorDAO implements DAO<Proveedor, String> {
-    private static final Logger logger = LoggerFactory.getLogger(ProveedorDAO.class);
+public class ProveedorRepository implements Repository<Proveedor, String> {
+    private static final Logger logger = LoggerFactory.getLogger(ProveedorRepository.class);
     
     /**
      * Retorna una lista vacía de proveedores

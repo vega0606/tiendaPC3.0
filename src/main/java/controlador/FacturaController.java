@@ -4,11 +4,13 @@ import modelo.Factura;
 import modelo.DetalleFactura;
 import modelo.Cliente;
 import modelo.Producto;
-import DAO.FacturaDAO;
-import DAO.ClienteDAO;
-import DAO.ProductoDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.ClienteRepository;
+import REPOSITORY.FacturaRepository;
+import REPOSITORY.ProductoRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,14 +22,14 @@ import java.util.List;
  */
 public class FacturaController {
     private static final Logger logger = LoggerFactory.getLogger(FacturaController.class);
-    private FacturaDAO facturaDAO;
-    private ClienteDAO clienteDAO;
-    private ProductoDAO productoDAO;
+    private FacturaRepository facturaDAO;
+    private ClienteRepository clienteDAO;
+    private ProductoRepository productoDAO;
     
     public FacturaController() {
-        facturaDAO = new FacturaDAO();
-        clienteDAO = new ClienteDAO();
-        productoDAO = new ProductoDAO();
+        facturaDAO = new FacturaRepository();
+        clienteDAO = new ClienteRepository();
+        productoDAO = new ProductoRepository();
     }
     
     /**

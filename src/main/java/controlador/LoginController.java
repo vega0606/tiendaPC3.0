@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Usuario;
-import DAO.UsuarioDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.UsuarioRepository;
 
 import java.time.LocalDateTime;
 
@@ -12,13 +14,13 @@ import java.time.LocalDateTime;
  */
 public class LoginController {
     private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
-    private UsuarioDAO usuarioDAO;
+    private UsuarioRepository usuarioDAO;
     
     // Variable para almacenar el usuario que inició sesión
     private static Usuario usuarioActual;
     
     public LoginController() {
-        usuarioDAO = new UsuarioDAO();
+        usuarioDAO = new UsuarioRepository();
     }
     
     /**
