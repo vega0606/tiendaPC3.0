@@ -30,7 +30,11 @@ public class Factura {
         this.total = BigDecimal.ZERO;
         this.estado = "Emitida";
         this.fecha = LocalDate.now();
+        
     }
+    
+    
+    
 
     // Getters y Setters
     public String getNumero() {

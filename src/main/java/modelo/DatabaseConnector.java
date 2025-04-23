@@ -63,7 +63,7 @@ public class DatabaseConnector {
                 // Default configuration if properties file is not found
                 props.setProperty("db.url", "jdbc:mysql://localhost:3306/sistema_facturacion_inventario?useSSL=false&serverTimezone=UTC");
                 props.setProperty("db.username", "root");
-                props.setProperty("db.password", "123");
+                props.setProperty("db.password", "1234");
                 props.setProperty("db.driver", "com.mysql.cj.jdbc.Driver");
             } else {
                 props.load(input);
