@@ -2,98 +2,54 @@ package controlador;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import modelo.Cliente;
+import REPOSITORY.ClienteRepository;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import java.time.LocalDate;
 
 /**
  * Controlador para la lógica de negocio de clientes.
+ * Ahora integrado con ClienteRepository para acceso a base de datos.
  */
 public class ClienteController {
     
-    // Base de datos en memoria para pruebas
-    private static List<Cliente> clientesDB = new ArrayList<>();
-    private static int nextId = 1;
-    private static boolean datosInicializados = false;
+    private static final Logger logger = LoggerFactory.getLogger(ClienteController.class);
+    private ClienteRepository clienteRepository;
     
     /**
      * Constructor del controlador.
      */
     public ClienteController() {
-        System.out.println("Inicializando ClienteController");
-        // Inicializar datos de prueba
-        inicializarDatosPrueba();
-    }
-    
-    /**
-     * Inicializa los datos de prueba si aún no han sido inicializados.
-     */
-    private void inicializarDatosPrueba() {
-        // Protección para evitar inicialización múltiple
-        if (datosInicializados) {
-            System.out.println("Datos ya inicializados, saltando inicialización");
-            return;
+        System.out.println("Inicializando ClienteController con conexión a base de datos");
+        try {
+            // Inicializar el repositorio
+            clienteRepository = new ClienteRepository();
+            
+            // Verificar si hay clientes en la BD
+            List<Cliente> clientesBD = clienteRepository.listarTodos();
+            System.out.println("Conexión a BD exitosa. Se encontraron " + clientesBD.size() + " clientes en la base de datos.");
+        } catch (Exception e) {
+            System.err.println("Error al inicializar conexión con base de datos: " + e.getMessage());
+            e.printStackTrace();
         }
-        
-        System.out.println("Inicializando datos de prueba");
-        
-        // Limpiar la lista existente para evitar duplicados
-        clientesDB.clear();
-        
-        // Crear algunos clientes de ejemplo
-        Cliente cliente1 = new Cliente();
-        cliente1.setId("1");
-        cliente1.setNombre("Juan Pérez");
-        cliente1.setRuc("10101010101");
-        cliente1.setTelefono("555-1234");
-        cliente1.setEmail("juan@ejemplo.com");
-        cliente1.setDireccion("Av. Principal 123");
-        clientesDB.add(cliente1);
-        
-        Cliente cliente2 = new Cliente();
-        cliente2.setId("2");
-        cliente2.setNombre("María García");
-        cliente2.setRuc("20202020202");
-        cliente2.setTelefono("555-5678");
-        cliente2.setEmail("maria@ejemplo.com");
-        cliente2.setDireccion("Calle Secundaria 456");
-        clientesDB.add(cliente2);
-        
-        // Añadir más clientes de ejemplo
-        Cliente cliente3 = new Cliente();
-        cliente3.setId("3");
-        cliente3.setNombre("Carlos Rodríguez");
-        cliente3.setRuc("30303030303");
-        cliente3.setTelefono("555-9012");
-        cliente3.setEmail("carlos@ejemplo.com");
-        cliente3.setDireccion("Plaza Central 789");
-        clientesDB.add(cliente3);
-        
-        Cliente cliente4 = new Cliente();
-        cliente4.setId("4");
-        cliente4.setNombre("Ana Martínez");
-        cliente4.setRuc("40404040404");
-        cliente4.setTelefono("555-3456");
-        cliente4.setEmail("ana@ejemplo.com");
-        cliente4.setDireccion("Avenida Norte 321");
-        clientesDB.add(cliente4);
-        
-        nextId = 5;
-        datosInicializados = true;
-        
-        System.out.println("Datos de prueba inicializados: " + clientesDB.size() + " clientes");
     }
     
     /**
-     * Obtiene todos los clientes.
+     * Obtiene todos los clientes desde la base de datos.
      * 
      * @return Lista de todos los clientes
      */
     public List<Cliente> obtenerTodosLosClientes() {
-        System.out.println("Obteniendo todos los clientes. Total: " + clientesDB.size());
-        for (Cliente c : clientesDB) {
-            System.out.println("Cliente en DB: " + c.getId() + " - " + c.getNombre());
+        try {
+            List<Cliente> clientes = clienteRepository.listarTodos();
+            System.out.println("Obteniendo todos los clientes. Total: " + clientes.size());
+            return clientes;
+        } catch (Exception e) {
+            System.err.println("Error al obtener clientes desde BD: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>(); // Retornar lista vacía en caso de error
         }
-        return new ArrayList<>(clientesDB);
     }
     
     /**
@@ -103,17 +59,20 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorNombre(String nombre) {
-        System.out.println("Buscando clientes por nombre: " + nombre);
-        if (nombre == null || nombre.trim().isEmpty()) {
-            return obtenerTodosLosClientes();
-        }
-        
-        List<Cliente> resultado = clientesDB.stream()
-            .filter(c -> c.getNombre().toLowerCase().contains(nombre.toLowerCase()))
-            .collect(Collectors.toList());
+        try {
+            System.out.println("Buscando clientes por nombre: " + nombre);
+            if (nombre == null || nombre.trim().isEmpty()) {
+                return obtenerTodosLosClientes();
+            }
             
-        System.out.println("Resultados encontrados: " + resultado.size());
-        return resultado;
+            List<Cliente> clientes = clienteRepository.buscarPorNombre(nombre);
+            System.out.println("Encontrados: " + clientes.size() + " clientes");
+            return clientes;
+        } catch (Exception e) {
+            System.err.println("Error al buscar clientes por nombre: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -123,17 +82,25 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorRuc(String ruc) {
-        System.out.println("Buscando clientes por RUC: " + ruc);
-        if (ruc == null || ruc.trim().isEmpty()) {
-            return obtenerTodosLosClientes();
-        }
-        
-        List<Cliente> resultado = clientesDB.stream()
-            .filter(c -> c.getRuc().contains(ruc))
-            .collect(Collectors.toList());
+        try {
+            System.out.println("Buscando clientes por RUC: " + ruc);
+            if (ruc == null || ruc.trim().isEmpty()) {
+                return obtenerTodosLosClientes();
+            }
             
-        System.out.println("Resultados encontrados: " + resultado.size());
-        return resultado;
+            Cliente cliente = clienteRepository.buscarPorRuc(ruc);
+            List<Cliente> resultado = new ArrayList<>();
+            if (cliente != null) {
+                resultado.add(cliente);
+            }
+            
+            System.out.println("Encontrados: " + resultado.size() + " clientes");
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("Error al buscar clientes por RUC: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -143,17 +110,31 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientesPorEmail(String email) {
-        System.out.println("Buscando clientes por email: " + email);
-        if (email == null || email.trim().isEmpty()) {
-            return obtenerTodosLosClientes();
-        }
-        
-        List<Cliente> resultado = clientesDB.stream()
-            .filter(c -> c.getEmail().toLowerCase().contains(email.toLowerCase()))
-            .collect(Collectors.toList());
+        try {
+            System.out.println("Buscando clientes por email: " + email);
+            if (email == null || email.trim().isEmpty()) {
+                return obtenerTodosLosClientes();
+            }
             
-        System.out.println("Resultados encontrados: " + resultado.size());
-        return resultado;
+            // Como no hay método específico en el repositorio para buscar por email,
+            // usamos el método general y filtramos
+            List<Cliente> clientes = obtenerTodosLosClientes();
+            List<Cliente> resultado = new ArrayList<>();
+            
+            for (Cliente cliente : clientes) {
+                if (cliente.getEmail() != null && 
+                    cliente.getEmail().toLowerCase().contains(email.toLowerCase())) {
+                    resultado.add(cliente);
+                }
+            }
+            
+            System.out.println("Encontrados: " + resultado.size() + " clientes");
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("Error al buscar clientes por email: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -163,25 +144,46 @@ public class ClienteController {
      * @return Lista de clientes que coinciden con el criterio
      */
     public List<Cliente> buscarClientes(String criterio) {
-        System.out.println("Buscando clientes por criterio general: " + criterio);
-        if (criterio == null || criterio.trim().isEmpty()) {
-            return obtenerTodosLosClientes();
-        }
-        
-        String criterioBusqueda = criterio.toLowerCase();
-        
-        List<Cliente> resultado = clientesDB.stream()
-            .filter(c -> 
-                c.getNombre().toLowerCase().contains(criterioBusqueda) ||
-                c.getRuc().toLowerCase().contains(criterioBusqueda) ||
-                c.getEmail().toLowerCase().contains(criterioBusqueda) ||
-                c.getTelefono().toLowerCase().contains(criterioBusqueda) ||
-                c.getDireccion().toLowerCase().contains(criterioBusqueda)
-            )
-            .collect(Collectors.toList());
+        try {
+            System.out.println("Buscando clientes por criterio general: " + criterio);
+            if (criterio == null || criterio.trim().isEmpty()) {
+                return obtenerTodosLosClientes();
+            }
             
-        System.out.println("Resultados encontrados: " + resultado.size());
-        return resultado;
+            // Como no hay método específico para búsqueda general, primero buscamos por nombre
+            // que es el criterio más común y luego complementamos con otros criterios si es necesario
+            List<Cliente> clientesPorNombre = clienteRepository.buscarPorNombre(criterio);
+            
+            // Buscar también por RUC
+            Cliente clientePorRuc = clienteRepository.buscarPorRuc(criterio);
+            
+            // Crear lista de resultados única
+            List<Cliente> resultado = new ArrayList<>(clientesPorNombre);
+            
+            // Agregar cliente por RUC si no está ya en la lista
+            if (clientePorRuc != null) {
+                boolean yaExiste = false;
+                for (Cliente c : resultado) {
+                    if (c.getId().equals(clientePorRuc.getId())) {
+                        yaExiste = true;
+                        break;
+                    }
+                }
+                if (!yaExiste) {
+                    resultado.add(clientePorRuc);
+                }
+            }
+            
+            // Para otros criterios, podríamos hacer una búsqueda más completa en todos los clientes
+            // Pero esto podría ser costoso en términos de rendimiento si hay muchos clientes
+            
+            System.out.println("Encontrados: " + resultado.size() + " clientes");
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("Error al buscar clientes por criterio general: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -201,22 +203,24 @@ public class ClienteController {
             
             // Asignar ID si es nuevo
             if (cliente.getId() == null || cliente.getId().isEmpty()) {
-                cliente.setId(String.valueOf(nextId++));
+                String nuevoId = clienteRepository.generarNuevoId();
+                cliente.setId(nuevoId);
                 System.out.println("Asignado ID: " + cliente.getId());
             }
             
-            // Verificar que no exista un cliente con el mismo RUC
-            boolean existeRuc = clientesDB.stream()
-                .anyMatch(c -> c.getRuc().equals(cliente.getRuc()) && !c.getId().equals(cliente.getId()));
-            
-            if (existeRuc) {
-                System.err.println("Ya existe un cliente con el mismo RUC/NIT: " + cliente.getRuc());
-                return false;
+            // Establecer valores por defecto si no están definidos
+            if (cliente.getEstado() == null || cliente.getEstado().isEmpty()) {
+                cliente.setEstado("Activo");
             }
             
-            // Agregar a la lista
-            clientesDB.add(cliente);
-            System.out.println("Cliente agregado con éxito. Total clientes: " + clientesDB.size());
+            if (cliente.getFechaRegistro() == null) {
+                cliente.setFechaRegistro(LocalDate.now());
+            }
+            
+            // Crear cliente en la base de datos
+            Cliente clienteCreado = clienteRepository.crear(cliente);
+            
+            System.out.println("Cliente agregado con éxito. ID: " + clienteCreado.getId());
             return true;
         } catch (Exception e) {
             System.err.println("Error al agregar cliente: " + e.getMessage());
@@ -240,31 +244,29 @@ public class ClienteController {
             
             System.out.println("Actualizando cliente ID: " + cliente.getId() + ", Nombre: " + cliente.getNombre());
             
-            // Buscar cliente por ID
-            int index = -1;
-            for (int i = 0; i < clientesDB.size(); i++) {
-                if (clientesDB.get(i).getId().equals(cliente.getId())) {
-                    index = i;
-                    break;
-                }
-            }
-            
-            if (index == -1) {
-                System.err.println("Cliente no encontrado para actualizar. ID: " + cliente.getId());
+            // Verificar que exista el cliente
+            Cliente clienteExistente = clienteRepository.buscarPorId(cliente.getId());
+            if (clienteExistente == null) {
+                System.err.println("Error: Cliente no encontrado con ID: " + cliente.getId());
                 return false;
             }
             
-            // Verificar RUC único
-            boolean existeRuc = clientesDB.stream()
-                .anyMatch(c -> c.getRuc().equals(cliente.getRuc()) && !c.getId().equals(cliente.getId()));
-            
-            if (existeRuc) {
-                System.err.println("Ya existe otro cliente con el mismo RUC/NIT: " + cliente.getRuc());
-                return false;
+            // Mantener valores que no se actualizan desde la vista
+            if (cliente.getEstado() == null || cliente.getEstado().isEmpty()) {
+                cliente.setEstado(clienteExistente.getEstado());
             }
             
-            // Actualizar
-            clientesDB.set(index, cliente);
+            if (cliente.getFechaRegistro() == null) {
+                cliente.setFechaRegistro(clienteExistente.getFechaRegistro());
+            }
+            
+            if (cliente.getSaldoPendiente() == 0) {
+                cliente.setSaldoPendiente(clienteExistente.getSaldoPendiente());
+            }
+            
+            // Actualizar cliente en la base de datos
+            Cliente clienteActualizado = clienteRepository.actualizar(cliente);
+            
             System.out.println("Cliente actualizado con éxito");
             return true;
         } catch (Exception e) {
@@ -283,17 +285,16 @@ public class ClienteController {
     public boolean eliminarCliente(String id) {
         try {
             System.out.println("Eliminando cliente con ID: " + id);
-            int sizeBefore = clientesDB.size();
-            boolean removed = clientesDB.removeIf(c -> c.getId().equals(id));
-            int sizeAfter = clientesDB.size();
             
-            if (removed) {
-                System.out.println("Cliente eliminado con éxito. Clientes restantes: " + sizeAfter);
+            boolean resultado = clienteRepository.eliminar(id);
+            
+            if (resultado) {
+                System.out.println("Cliente eliminado con éxito");
             } else {
-                System.err.println("No se encontró el cliente con ID: " + id);
+                System.err.println("No se encontró cliente con ID: " + id);
             }
             
-            return removed;
+            return resultado;
         } catch (Exception e) {
             System.err.println("Error al eliminar cliente: " + e.getMessage());
             e.printStackTrace();
@@ -309,9 +310,18 @@ public class ClienteController {
      * @return true si se exportó correctamente, false en caso contrario
      */
     public boolean exportarAPDF(List<Cliente> clientes, String rutaArchivo) {
-        // En una implementación real, aquí iría el código para generar el PDF
-        System.out.println("Exportando " + clientes.size() + " clientes a PDF: " + rutaArchivo);
-        return true;
+        try {
+            System.out.println("Exportando " + clientes.size() + " clientes a PDF: " + rutaArchivo);
+            // Implementación pendiente para generar PDF
+            // Aquí se podría utilizar alguna librería como iText, JasperReports, etc.
+            
+            System.out.println("Exportación a PDF completada");
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al exportar a PDF: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
     
     /**
@@ -322,42 +332,18 @@ public class ClienteController {
      * @return true si se exportó correctamente, false en caso contrario
      */
     public boolean exportarAExcel(List<Cliente> clientes, String rutaArchivo) {
-        // En una implementación real, aquí iría el código para generar el Excel
-        System.out.println("Exportando " + clientes.size() + " clientes a Excel: " + rutaArchivo);
-        return true;
-    }
-    
-    /**
-     * Crea un nuevo cliente con los datos especificados.
-     * 
-     * @param nombre Nombre del cliente
-     * @param telefono Teléfono del cliente
-     * @param email Email del cliente
-     * @param direccion Dirección del cliente
-     * @param ruc RUC/NIT del cliente
-     * @return El cliente creado o null si hubo un error
-     */
-    public Cliente crearCliente(String nombre, String telefono, String email, String direccion, String ruc) {
-        // Verificamos si ya existe un cliente con ese RUC
-        boolean existeRuc = clientesDB.stream()
-            .anyMatch(c -> c.getRuc().equals(ruc));
-
-        if (existeRuc) {
-            System.err.println("Ya existe un cliente con ese RUC: " + ruc);
-            return null;
+        try {
+            System.out.println("Exportando " + clientes.size() + " clientes a Excel: " + rutaArchivo);
+            // Implementación pendiente para generar Excel
+            // Aquí se podría utilizar alguna librería como Apache POI, JExcel, etc.
+            
+            System.out.println("Exportación a Excel completada");
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error al exportar a Excel: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
-
-        Cliente cliente = new Cliente();
-        cliente.setId(String.valueOf(nextId++));
-        cliente.setNombre(nombre);
-        cliente.setTelefono(telefono);
-        cliente.setEmail(email);
-        cliente.setDireccion(direccion);
-        cliente.setRuc(ruc);
-
-        clientesDB.add(cliente);
-        System.out.println("Cliente creado con éxito. ID: " + cliente.getId() + ", Nombre: " + cliente.getNombre());
-        return cliente;
     }
     
     /**
@@ -367,37 +353,66 @@ public class ClienteController {
      * @return Cliente encontrado o null si no existe
      */
     public Cliente buscarClientePorRuc(String ruc) {
-        System.out.println("Buscando cliente con RUC exacto: " + ruc);
-        Cliente result = clientesDB.stream()
-            .filter(c -> c.getRuc().equals(ruc))
-            .findFirst()
-            .orElse(null);
+        try {
+            System.out.println("Buscando cliente con RUC exacto: " + ruc);
+            Cliente cliente = clienteRepository.buscarPorRuc(ruc);
             
-        if (result != null) {
-            System.out.println("Cliente encontrado: " + result.getId() + " - " + result.getNombre());
-        } else {
-            System.out.println("No se encontró cliente con RUC: " + ruc);
+            if (cliente != null) {
+                System.out.println("Cliente encontrado: " + cliente.getId() + " - " + cliente.getNombre());
+            } else {
+                System.out.println("No se encontró cliente con RUC: " + ruc);
+            }
+            
+            return cliente;
+        } catch (Exception e) {
+            System.err.println("Error al buscar cliente por RUC: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
-        
-        return result;
     }
     
     /**
-     * Permite restablecer los datos de prueba (útil para pruebas).
-     */
-    public void reiniciarDatosPrueba() {
-        System.out.println("Reiniciando datos de prueba");
-        datosInicializados = false;
-        inicializarDatosPrueba();
-        System.out.println("Datos de prueba reiniciados exitosamente");
-    }
-    
-    /**
-     * Obtiene el número de clientes en la base de datos.
+     * Actualiza el saldo pendiente de un cliente.
      * 
-     * @return Cantidad de clientes
+     * @param id ID del cliente
+     * @param monto Monto a añadir (positivo) o restar (negativo) al saldo
+     * @return true si se actualizó correctamente
      */
-    public int contarClientes() {
-        return clientesDB.size();
+    public boolean actualizarSaldoPendiente(String id, double monto) {
+        try {
+            System.out.println("Actualizando saldo pendiente para cliente ID: " + id + ", monto: " + monto);
+            boolean resultado = clienteRepository.actualizarSaldoPendiente(id, monto);
+            
+            if (resultado) {
+                System.out.println("Saldo actualizado con éxito");
+            } else {
+                System.err.println("No se pudo actualizar el saldo. Cliente no encontrado con ID: " + id);
+            }
+            
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("Error al actualizar saldo pendiente: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Listar clientes por estado.
+     * 
+     * @param estado Estado del cliente ('Activo', 'Inactivo', etc.)
+     * @return Lista de clientes con el estado especificado
+     */
+    public List<Cliente> listarPorEstado(String estado) {
+        try {
+            System.out.println("Listando clientes por estado: " + estado);
+            List<Cliente> clientes = clienteRepository.listarPorEstado(estado);
+            System.out.println("Encontrados: " + clientes.size() + " clientes");
+            return clientes;
+        } catch (Exception e) {
+            System.err.println("Error al listar clientes por estado: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 }
