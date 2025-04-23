@@ -4,9 +4,11 @@ import modelo.Pedido;
 import modelo.DetallePedido;
 import modelo.Proveedor;
 import modelo.Producto;
-import DAO.PedidoDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.PedidoRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,12 +20,12 @@ import java.util.List;
  */
 public class PedidoController {
     private static final Logger logger = LoggerFactory.getLogger(PedidoController.class);
-    private PedidoDAO pedidoDAO;
+    private PedidoRepository pedidoDAO;
     private ProveedorController proveedorController;
     private ProductoController productoController;
     
     public PedidoController() {
-        pedidoDAO = new PedidoDAO();
+        pedidoDAO = new PedidoRepository();
         proveedorController = new ProveedorController();
         productoController = new ProductoController();
     }

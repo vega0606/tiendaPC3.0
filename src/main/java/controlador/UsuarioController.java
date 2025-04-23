@@ -3,11 +3,13 @@ package controlador;
 import modelo.Usuario;
 import modelo.Rol;
 import modelo.Permiso;
-import DAO.UsuarioDAO;
-import DAO.RolDAO;
-import DAO.PermisoDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.PermisoRepository;
+import REPOSITORY.RolRepository;
+import REPOSITORY.UsuarioRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,15 +22,15 @@ import java.util.List;
  */
 public class UsuarioController {
     private static final Logger logger = LoggerFactory.getLogger(UsuarioController.class);
-    private UsuarioDAO usuarioDAO;
-    private RolDAO rolDAO;
-    private PermisoDAO permisoDAO;
+    private UsuarioRepository usuarioDAO;
+    private RolRepository rolDAO;
+    private PermisoRepository permisoDAO;
     private static Usuario usuarioActual;
     
     public UsuarioController() {
-        usuarioDAO = new UsuarioDAO();
-        rolDAO = new RolDAO();
-        permisoDAO = new PermisoDAO();
+        usuarioDAO = new UsuarioRepository();
+        rolDAO = new RolRepository();
+        permisoDAO = new PermisoRepository();
     }
     
     /**

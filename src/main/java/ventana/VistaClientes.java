@@ -1,19 +1,15 @@
 package ventana;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.*;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-import controlador.VistaClientesController;
 import controlador.ClienteController;
+import controlador.VistaClientesController;
 import modelo.Cliente;
 
-/**
- * Vista para la gestión de clientes.
- * Permite visualizar, crear, editar y eliminar clientes.
- */
 public class VistaClientes extends JPanel {
     // Componentes principales
     private JTextField busquedaField;
@@ -23,9 +19,7 @@ public class VistaClientes extends JPanel {
     private JButton agregarButton;
     private JButton editarButton;
     private JButton eliminarButton;
-    private JButton exportarPDFButton;
-    private JButton exportarExcelButton;
-    
+   
     // Paneles para vistas múltiples
     private JPanel listadoPanel;
     private JPanel formularioPanel;
@@ -68,6 +62,7 @@ public class VistaClientes extends JPanel {
         setLayout(new BorderLayout());
         inicializarPanel();
         
+        // Crear el controlador y asignarlo
         controller = new VistaClientesController(this, clienteController);
         configurarListeners();
     }
@@ -120,6 +115,16 @@ public class VistaClientes extends JPanel {
         
         // Configurar listener para el botón de cancelar
         cancelarButton.addActionListener(e -> mostrarListado());
+        
+        // Listener para buscar al presionar Enter en el campo de búsqueda
+        busquedaField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && controller != null) {
+                    controller.buscarClientes();
+                }
+            }
+        });
     }
     
     /**
@@ -133,9 +138,7 @@ public class VistaClientes extends JPanel {
             // Botones del panel de listado que necesitan controlador
             buscarButton.addActionListener(e -> controller.buscarClientes());
             eliminarButton.addActionListener(e -> controller.eliminarCliente());
-            exportarPDFButton.addActionListener(e -> controller.exportarAPDF());
-            exportarExcelButton.addActionListener(e -> controller.exportarAExcel());
-            
+           
             // Botón de guardar del formulario
             guardarButton.addActionListener(e -> {
                 Cliente cliente = obtenerClienteDesdeFormulario();
@@ -226,16 +229,6 @@ public class VistaClientes extends JPanel {
         
         // Panel de exportación
         JPanel exportPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        
-        exportarPDFButton = new JButton("Exportar a PDF");
-        exportarPDFButton.setBackground(new Color(183, 28, 28));
-        exportarPDFButton.setForeground(Color.WHITE);
-        exportPanel.add(exportarPDFButton);
-        
-        exportarExcelButton = new JButton("Exportar a Excel");
-        exportarExcelButton.setBackground(new Color(46, 125, 50));
-        exportarExcelButton.setForeground(Color.WHITE);
-        exportPanel.add(exportarExcelButton);
         
         // Panel inferior que combina acciones y exportación
         JPanel bottomPanel = new JPanel(new BorderLayout());
@@ -363,6 +356,12 @@ public class VistaClientes extends JPanel {
         System.out.println("Mostrando listado de clientes");
         try {
             cardLayout.show(mainPanel, "LISTADO");
+            
+            // Si hay un controlador, intentar recargar los datos
+            if (controller != null) {
+                controller.buscarClientes();
+            }
+            
             System.out.println("Listado mostrado con éxito");
         } catch (Exception e) {
             System.err.println("Error al mostrar listado: " + e.getMessage());
@@ -485,18 +484,26 @@ public class VistaClientes extends JPanel {
      * @param clientes Lista de clientes a mostrar
      */
     public void mostrarClientes(List<Cliente> clientes) {
-        DefaultTableModel model = (DefaultTableModel) clientesTable.getModel();
-        model.setRowCount(0); // Limpiar tabla
-        
-        for (Cliente cliente : clientes) {
-            model.addRow(new Object[] {
-                cliente.getId(),
-                cliente.getNombre(),
-                cliente.getRuc(),
-                cliente.getTelefono(),
-                cliente.getEmail(),
-                cliente.getDireccion()
-            });
+        try {
+            DefaultTableModel model = (DefaultTableModel) clientesTable.getModel();
+            model.setRowCount(0); // Limpiar tabla
+            
+            System.out.println("Actualizando tabla con " + clientes.size() + " clientes");
+            
+            for (Cliente cliente : clientes) {
+                model.addRow(new Object[] {
+                    cliente.getId(),
+                    cliente.getNombre(),
+                    cliente.getRuc(),
+                    cliente.getTelefono(),
+                    cliente.getEmail(),
+                    cliente.getDireccion()
+                });
+                System.out.println("Añadido cliente: " + cliente.getId() + " - " + cliente.getNombre());
+            }
+        } catch (Exception e) {
+            System.err.println("Error al mostrar clientes en tabla: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -686,14 +693,6 @@ public class VistaClientes extends JPanel {
     
     public JButton getEliminarButton() {
         return eliminarButton;
-    }
-    
-    public JButton getExportarPDFButton() {
-        return exportarPDFButton;
-    }
-    
-    public JButton getExportarExcelButton() {
-        return exportarExcelButton;
     }
     
     public JButton getGuardarButton() {

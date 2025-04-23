@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import java.util.List;
  * @param <T> tipo de entidad
  * @param <K> tipo de clave primaria
  */
-public interface DAO<T, K> {
+public interface Repository<T, K> {
     
     /**
      * Crear un nuevo registro

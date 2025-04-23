@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.Alerta;
 import modelo.DatabaseConnector;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con alertas del sistema
  */
-public class AlertaDAO implements DAO<Alerta, String> {
-    private static final Logger logger = LoggerFactory.getLogger(AlertaDAO.class);
+public class AlertaRepository implements Repository<Alerta, String> {
+    private static final Logger logger = LoggerFactory.getLogger(AlertaRepository.class);
     
     @Override
     public Alerta crear(Alerta alerta) throws Exception {

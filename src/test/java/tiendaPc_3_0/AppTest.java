@@ -1,12 +1,10 @@
 package tiendaPc_3_0;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
  * Unit test for simple App.
  */
+<<<<<<< HEAD
 public class AppTest  extends TestCase{
     /**
      * Create the test case
@@ -33,4 +31,8 @@ public class AppTest  extends TestCase{
     {
         assertTrue( true );
     }
+=======
+public class AppTest {
+    
+>>>>>>> 532e166c2538dab1073294436cff9ede023a4dae
 }

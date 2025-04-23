@@ -29,10 +29,11 @@ public class MenuLateral {
 	        
 	        // Botones del menú
 	        String[] menuItems = {
-	            "Facturación", "Inventario", "Reportes", "Clientes/Proveedores", 
-	            "Pedidos", "Devoluciones", "Alertas", "Transacciones", 
-	            "Usuarios", "Export/Import"
-	        };
+		            "Facturación", "Inventario", "Reportes", "Clientes/Proveedores", 
+		            "Pedidos", "Devoluciones", "Alertas", "Transacciones", 
+		            "Usuarios", "Asistente IA"
+		        };
+
 	        
 	        for (String item : menuItems) {
 	            JButton menuButton = new JButton(item);
