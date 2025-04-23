@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-/META-INF/
 /controlador/
-/modelo/
 /ventana/
-=======
-/servicio/
-/ventana/
-/util/
-/controlador/
-/DAO/
 /META-INF/
-/REPOSITORY/
->>>>>>> 532e166c2538dab1073294436cff9ede023a4dae
