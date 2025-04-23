@@ -1,9 +1,11 @@
 package controlador;
 
 import modelo.Proveedor;
-import DAO.ProveedorDAO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import REPOSITORY.ProveedorRepository;
 
 import java.util.List;
 
@@ -12,10 +14,10 @@ import java.util.List;
  */
 public class ProveedorController {
     private static final Logger logger = LoggerFactory.getLogger(ProveedorController.class);
-    private ProveedorDAO proveedorDAO;
+    private ProveedorRepository proveedorDAO;
     
     public ProveedorController() {
-        proveedorDAO = new ProveedorDAO();
+        proveedorDAO = new ProveedorRepository();
     }
     
     /**

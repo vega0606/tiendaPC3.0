@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Rol;
@@ -13,12 +13,12 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con roles de usuario
  */
-public class RolDAO implements DAO<Rol, Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(RolDAO.class);
-    private PermisoDAO permisoDAO;
+public class RolRepository implements Repository<Rol, Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(RolRepository.class);
+    private PermisoRepository permisoDAO;
     
-    public RolDAO() {
-        this.permisoDAO = new PermisoDAO();
+    public RolRepository() {
+        this.permisoDAO = new PermisoRepository();
     }
     
     @Override

@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.MovimientoInventario;
@@ -14,12 +14,12 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con movimientos de inventario
  */
-public class MovimientoInventarioDAO implements DAO<MovimientoInventario, Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(MovimientoInventarioDAO.class);
-    private ProductoDAO productoDAO;
+public class MovimientoInventarioRepository implements Repository<MovimientoInventario, Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(MovimientoInventarioRepository.class);
+    private ProductoRepository productoDAO;
     
-    public MovimientoInventarioDAO() {
-        this.productoDAO = new ProductoDAO();
+    public MovimientoInventarioRepository() {
+        this.productoDAO = new ProductoRepository();
     }
     
     @Override

@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Pedido;
@@ -16,14 +16,14 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con pedidos a proveedores
  */
-public class PedidoDAO implements DAO<Pedido, String> {
-    private static final Logger logger = LoggerFactory.getLogger(PedidoDAO.class);
-    private ProveedorDAO proveedorDAO;
-    private ProductoDAO productoDAO;
+public class PedidoRepository implements Repository<Pedido, String> {
+    private static final Logger logger = LoggerFactory.getLogger(PedidoRepository.class);
+    private ProveedorRepository proveedorDAO;
+    private ProductoRepository productoDAO;
     
-    public PedidoDAO() {
-        this.proveedorDAO = new ProveedorDAO();
-        this.productoDAO = new ProductoDAO();
+    public PedidoRepository() {
+        this.proveedorDAO = new ProveedorRepository();
+        this.productoDAO = new ProductoRepository();
     }
     
     @Override

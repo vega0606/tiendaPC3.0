@@ -13,6 +13,7 @@ import ventana.VistaAlertas;
 import ventana.VistaClientes;
 import ventana.VistaDevoluciones;
 import ventana.VistaFacturacion;
+import ventana.VistaIA;
 import ventana.VistaInventario;
 import ventana.VistaPedidos;
 import ventana.VistaReportes;
@@ -76,6 +77,10 @@ public class SistemaFacturacionInventario extends JFrame {
 		VistaUsuarios vistaUsuarios = new VistaUsuarios();
 		mainPanel.add(vistaUsuarios.getPanel(), "Usuarios");
 		vistas.put("Usuarios", vistaUsuarios.getPanel());
+		
+		VistaIA vistaIA = new VistaIA();
+		mainPanel.add(vistaIA.getPanel(), "Asistente IA");
+		vistas.put("Asistente IA", vistaIA.getPanel());
 
 		// Layout principal
 		setLayout(new BorderLayout());

@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Transaccion;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con transacciones
  */
-public class TransaccionDAO implements DAO<Transaccion, String> {
-    private static final Logger logger = LoggerFactory.getLogger(TransaccionDAO.class);
+public class TransaccionRepository implements Repository<Transaccion, String> {
+    private static final Logger logger = LoggerFactory.getLogger(TransaccionRepository.class);
     
     @Override
     public Transaccion crear(Transaccion transaccion) throws Exception {

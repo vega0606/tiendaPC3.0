@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Factura;
@@ -16,14 +16,14 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con facturas
  */
-public class FacturaDAO implements DAO<Factura, String> {
-    private static final Logger logger = LoggerFactory.getLogger(FacturaDAO.class);
-    private ClienteDAO clienteDAO;
-    private ProductoDAO productoDAO;
+public class FacturaRepository implements Repository<Factura, String> {
+    private static final Logger logger = LoggerFactory.getLogger(FacturaRepository.class);
+    private ClienteRepository clienteDAO;
+    private ProductoRepository productoDAO;
     
-    public FacturaDAO() {
-        clienteDAO = new ClienteDAO();
-        productoDAO = new ProductoDAO();
+    public FacturaRepository() {
+        clienteDAO = new ClienteRepository();
+        productoDAO = new ProductoRepository();
     }
     
     @Override

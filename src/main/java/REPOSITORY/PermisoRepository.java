@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Permiso;
@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con permisos
  */
-public class PermisoDAO implements DAO<Permiso, Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(PermisoDAO.class);
+public class PermisoRepository implements Repository<Permiso, Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(PermisoRepository.class);
     
     @Override
     public Permiso crear(Permiso permiso) throws Exception {

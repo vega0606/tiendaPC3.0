@@ -1,4 +1,4 @@
-package DAO;
+package REPOSITORY;
 
 import modelo.DatabaseConnector;
 import modelo.Usuario;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * DAO para operaciones relacionadas con usuarios
  */
-public class UsuarioDAO implements DAO<Usuario, Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(UsuarioDAO.class);
+public class UsuarioRepository implements Repository<Usuario, Integer> {
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioRepository.class);
     
     @Override
     public Usuario crear(Usuario usuario) throws Exception {
